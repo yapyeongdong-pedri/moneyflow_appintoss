@@ -28,7 +28,7 @@ export const templates: Template[] = [
       ...baseGraph(),
       nodes: [
         { id: 'n1', type: 'income_source', name: '월급', ui: { x: 40, y: 180 } },
-        { id: 'n2', type: 'asset_account', name: '주거래 통장', ui: { x: 260, y: 180 } },
+        { id: 'n2', type: 'asset_account', name: '월급통장', ui: { x: 260, y: 180 } },
         { id: 'n3', type: 'payment_instrument', name: '신용카드', ui: { x: 480, y: 120 } },
         { id: 'n4', type: 'expense_category', name: '생활비', ui: { x: 700, y: 80 } },
         { id: 'n5', type: 'expense_category', name: '관리비/통신비', ui: { x: 700, y: 240 } }
@@ -88,4 +88,3 @@ export const templates: Template[] = [
 export function createEmptyGraph(): FlowGraph {
   return baseGraph();
 }
-

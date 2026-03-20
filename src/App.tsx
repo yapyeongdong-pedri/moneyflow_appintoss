@@ -8,7 +8,8 @@ import ReactFlow, {
   Node,
   NodeProps,
   Position,
-  ReactFlowProvider
+  ReactFlowProvider,
+  useReactFlow
 } from 'reactflow';
 import { BannerAdWrapper } from './ads/BannerAdWrapper';
 import { getBannerAdGroupId } from './ads/adConstants';
@@ -286,6 +287,7 @@ function BottomSheet({
 }
 
 function AppBody() {
+  const { fitView } = useReactFlow();
   const [history, setHistory] = useState<GraphHistoryState | null>(null);
   const [selection, setSelection] = useState<Selection>({ kind: 'none' });
   const [newNodeName, setNewNodeName] = useState('');
@@ -299,7 +301,11 @@ function AppBody() {
 
   useEffect(() => {
     const loaded = loadGraph();
-    if (!loaded) return;
+    if (!loaded || loaded.nodes.length === 0) {
+      const starter = applyLayout(templates[0].createGraph(), 'circuit');
+      setHistory(createHistory(starter));
+      return;
+    }
     setHistory(createHistory(loaded));
   }, []);
 
@@ -307,6 +313,14 @@ function AppBody() {
     if (!history) return;
     saveGraph(history.present);
   }, [history]);
+
+  useEffect(() => {
+    if (!history?.present.nodes.length) return;
+    const timer = window.setTimeout(() => {
+      void fitView({ padding: 0.28, duration: 250 });
+    }, 30);
+    return () => window.clearTimeout(timer);
+  }, [history?.present.nodes.length, history?.present.edges.length, fitView]);
 
   const graph = history?.present;
   const env = detectEnvironment();
@@ -463,6 +477,18 @@ function AppBody() {
           }}
           nodesDraggable={!nodesLocked}
           preventScrolling={false}
+          panOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnScroll={false}
+          zoomOnDoubleClick={false}
+          nodeExtent={[
+            [0, 0],
+            [360, 2400]
+          ]}
+          translateExtent={[
+            [0, 0],
+            [360, 2400]
+          ]}
           fitView
         >
           <Background />
@@ -704,4 +730,3 @@ export function App() {
     </ReactFlowProvider>
   );
 }
-
