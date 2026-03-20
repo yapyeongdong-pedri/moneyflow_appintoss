@@ -1,0 +1,341 @@
+:root {
+  font-family: "Toss Product Sans", "Tossface", "SF Pro KR", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", Roboto, "Noto Sans KR", sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f7fafc;
+  color: #13161a;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 0% 0%, var(--bg-soft), transparent 45%), linear-gradient(180deg, var(--bg-main), var(--bg-main));
+  color: var(--text-primary);
+  padding-bottom: 108px;
+}
+
+.theme-calm-mint {
+  --bg-main: #eff8f6;
+  --bg-soft: #b6e6da;
+  --panel: #ffffff;
+  --accent: #0f8f7f;
+  --accent-weak: #d6f2ec;
+  --text-primary: #12211e;
+  --text-muted: #49605a;
+  --danger: #d14343;
+}
+
+.theme-deep-ocean {
+  --bg-main: #ecf3fb;
+  --bg-soft: #b7d4f7;
+  --panel: #ffffff;
+  --accent: #1e5ea9;
+  --accent-weak: #dce9fb;
+  --text-primary: #14263e;
+  --text-muted: #50657f;
+  --danger: #c23939;
+}
+
+.theme-warm-sand {
+  --bg-main: #fdf6ed;
+  --bg-soft: #f7ddbc;
+  --panel: #ffffff;
+  --accent: #b66522;
+  --accent-weak: #fbead7;
+  --text-primary: #3d2b1e;
+  --text-muted: #6e5746;
+  --danger: #b93535;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.env-badge {
+  display: inline-flex;
+  margin: 6px 0 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-weak);
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.canvas-wrap {
+  position: relative;
+  height: calc(100dvh - 220px);
+  min-height: 560px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: 0 16px 44px rgba(20, 34, 56, 0.08);
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 16px 44px rgba(20, 34, 56, 0.08);
+}
+
+.panel h3 {
+  margin-top: 0;
+}
+
+.detail-card,
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.composer {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: min(280px, calc(100% - 20px));
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(20, 34, 56, 0.08);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+input,
+select {
+  border: 1px solid #cfd6df;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 15px;
+}
+
+.panel-actions,
+.undo-redo,
+.onboarding-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-weak {
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.switch-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.node-shape {
+  display: grid;
+  place-items: center;
+  min-width: 112px;
+  min-height: 64px;
+  padding: 12px;
+  font-size: 13px;
+  text-align: center;
+  color: #fff;
+  background: var(--accent);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.node-circle {
+  border-radius: 999px;
+}
+
+.node-rounded {
+  border-radius: 20px;
+}
+
+.node-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.node-hexagon {
+  clip-path: polygon(20% 0, 80% 0, 100% 50%, 80% 100%, 20% 100%, 0 50%);
+}
+
+.node-octagon {
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+}
+
+.legend {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  border: 1px solid rgba(20, 34, 56, 0.08);
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.legend ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 120px;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.bottom-ad {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(20, 34, 56, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.banner-placeholder {
+  height: 96px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px dashed #b8c2ce;
+  color: #708093;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(90deg, #f3f5f8, #eef4ff);
+}
+
+.onboarding {
+  width: min(900px, calc(100% - 32px));
+  margin: 28px auto;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 16px 44px rgba(20, 34, 56, 0.08);
+}
+
+.template-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid #d9e2ee;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.template-card.active {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+}
+
+.rename-grid {
+  margin: 14px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.confirm-box {
+  margin-top: 8px;
+  border: 1px solid #f3b4b4;
+  border-radius: 10px;
+  background: #fff3f3;
+  padding: 10px;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    margin-bottom: 10px;
+  }
+
+  .canvas-wrap {
+    height: calc(100dvh - 240px);
+    min-height: 520px;
+  }
+
+  .template-grid,
+  .rename-grid {
+    grid-template-columns: 1fr;
+  }
+}
