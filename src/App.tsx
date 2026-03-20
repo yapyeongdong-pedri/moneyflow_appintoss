@@ -27,7 +27,7 @@ import {
   updateEdge,
   updateNode
 } from './domain/graph-ops';
-import { EDGE_TYPE_LABEL, FlowEdge, FlowGraph, NODE_TYPE_LABEL, NodeType, ThemeName } from './domain/graph-model';
+import { EDGE_TYPE_LABEL, FlowEdge, FlowGraph, FlowNode, NODE_TYPE_LABEL, NodeType, ThemeName } from './domain/graph-model';
 import { resolveEdgeType } from './domain/graph-validator';
 import { detectEnvironment } from './infra/environment';
 import { loadGraph, saveGraph } from './infra/storage';
@@ -42,6 +42,8 @@ const THEMES: Record<ThemeName, { title: string; className: string }> = {
   'deep-ocean': { title: 'Deep Ocean', className: 'theme-deep-ocean' },
   'warm-sand': { title: 'Warm Sand', className: 'theme-warm-sand' }
 };
+
+const NODE_TYPE_OPTIONS = Object.entries(NODE_TYPE_LABEL) as Array<[NodeType, string]>;
 
 function nodeClass(type: NodeType): string {
   switch (type) {
@@ -318,9 +320,9 @@ function AppBody() {
             <label>
               타입
               <select value={newNodeType} onChange={(event) => setNewNodeType(event.target.value as NodeType)}>
-                {Object.keys(NODE_TYPE_LABEL).map((type) => (
+                {NODE_TYPE_OPTIONS.map(([type, label]) => (
                   <option key={type} value={type}>
-                    {NODE_TYPE_LABEL[type as NodeType]}
+                    {label}
                   </option>
                 ))}
               </select>
@@ -413,8 +415,8 @@ function AppBody() {
               <p>
                 유효 연결:
                 {(() => {
-                  const source = graph.nodes.find((node) => node.id === selection.value.sourceId);
-                  const target = graph.nodes.find((node) => node.id === selection.value.targetId);
+                  const source = history.present.nodes.find((node) => node.id === selection.value.sourceId);
+                  const target = history.present.nodes.find((node) => node.id === selection.value.targetId);
                   if (!source || !target) return '오류';
                   return resolveEdgeType(source.type, target.type) ? '정상' : '비정상';
                 })()}

@@ -2,6 +2,12 @@ import { toPng } from 'html-to-image';
 import { FlowGraph } from '../../domain/graph-model';
 import { detectEnvironment } from '../../infra/environment';
 
+const TOSS_WEB_FRAMEWORK_MODULE = '@apps-in-toss/web-framework';
+
+async function loadTossFramework(): Promise<Record<string, unknown>> {
+  return (await import(/* @vite-ignore */ TOSS_WEB_FRAMEWORK_MODULE)) as Record<string, unknown>;
+}
+
 function buildFileName(): string {
   const now = new Date();
   const pad = (value: number) => `${value}`.padStart(2, '0');
@@ -31,11 +37,11 @@ export async function shareGraph(graph: FlowGraph): Promise<string> {
 
   if (env !== 'web') {
     try {
-      const tossFramework = await import('@apps-in-toss/web-framework');
-      const maybeGetLink = (tossFramework as Record<string, unknown>).getTossShareLink as
+      const tossFramework = await loadTossFramework();
+      const maybeGetLink = tossFramework.getTossShareLink as
         | ((params: { path: string; params: Record<string, string> }) => Promise<string>)
         | undefined;
-      const maybeShare = (tossFramework as Record<string, unknown>).share as
+      const maybeShare = tossFramework.share as
         | ((params: { title: string; text: string; url: string }) => Promise<void>)
         | undefined;
       if (maybeGetLink && maybeShare) {
@@ -62,4 +68,3 @@ export async function shareGraph(graph: FlowGraph): Promise<string> {
   await navigator.clipboard.writeText(`${title}\n${text}\n${location.href}`);
   return '공유 API가 없어 링크를 클립보드에 복사했어요.';
 }
-

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type BannerAttachResult = { destroy: () => void } | undefined;
+const TOSS_WEB_FRAMEWORK_MODULE = '@apps-in-toss/web-framework';
+
+async function loadTossFramework(): Promise<Record<string, unknown>> {
+  return (await import(/* @vite-ignore */ TOSS_WEB_FRAMEWORK_MODULE)) as Record<string, unknown>;
+}
 
 export function useTossBanner() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -13,7 +18,7 @@ export function useTossBanner() {
     let mounted = true;
     (async () => {
       try {
-        const tossFramework = (await import('@apps-in-toss/web-framework')) as Record<string, unknown>;
+        const tossFramework = await loadTossFramework();
         const tossAds = tossFramework.TossAds as Record<string, unknown> | undefined;
         const initialize = tossAds?.initialize as
           | ({ isSupported?: () => boolean } & ((args: { callbacks: { onInitialized: () => void } }) => void))
@@ -43,7 +48,7 @@ export function useTossBanner() {
   const attachBanner = useCallback(async (adGroupId: string, element: HTMLElement): Promise<BannerAttachResult> => {
     if (!isInitialized) return undefined;
     try {
-      const tossFramework = (await import('@apps-in-toss/web-framework')) as Record<string, unknown>;
+      const tossFramework = await loadTossFramework();
       const tossAds = tossFramework.TossAds as Record<string, unknown> | undefined;
       const attachBannerFn = tossAds?.attachBanner as
         | ({ isSupported?: () => boolean } & ((id: string, target: HTMLElement, options?: unknown) => BannerAttachResult))
@@ -63,4 +68,3 @@ export function useTossBanner() {
 
   return { isInitialized, attachBanner };
 }
-
