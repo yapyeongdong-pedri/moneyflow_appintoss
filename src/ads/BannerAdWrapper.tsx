@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { hasNativeWebViewBridge } from '../infra/environment';
 import { useTossBanner } from './useTossBanner';
 
 interface BannerAdWrapperProps {
@@ -6,16 +7,13 @@ interface BannerAdWrapperProps {
   mode?: 'fixed' | 'inline';
 }
 
-function isTossEnvironment(): boolean {
-  return Boolean((window as Window & { ReactNativeWebView?: unknown }).ReactNativeWebView);
-}
-
 export function BannerAdWrapper({ adGroupId, mode = 'fixed' }: BannerAdWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { isInitialized, attachBanner } = useTossBanner();
+  const isNativeWebView = hasNativeWebViewBridge();
 
   useEffect(() => {
-    if (!isInitialized || !containerRef.current || !isTossEnvironment()) return;
+    if (!isInitialized || !containerRef.current || !isNativeWebView) return;
 
     let mounted = true;
     let destroyer: { destroy: () => void } | undefined;
@@ -32,9 +30,9 @@ export function BannerAdWrapper({ adGroupId, mode = 'fixed' }: BannerAdWrapperPr
       mounted = false;
       destroyer?.destroy();
     };
-  }, [adGroupId, attachBanner, isInitialized]);
+  }, [adGroupId, attachBanner, isInitialized, isNativeWebView]);
 
-  if (!isTossEnvironment()) {
+  if (!isNativeWebView) {
     return (
       <div className="banner-placeholder" aria-label="광고 자리">
         광고 배너 미리보기
@@ -49,4 +47,3 @@ export function BannerAdWrapper({ adGroupId, mode = 'fixed' }: BannerAdWrapperPr
     />
   );
 }
-
