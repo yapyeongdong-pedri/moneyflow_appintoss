@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import ReactFlow, {
   Background,
   Connection,
@@ -12,7 +12,7 @@ import ReactFlow, {
 } from 'reactflow';
 import { BannerAdWrapper } from './ads/BannerAdWrapper';
 import { getBannerAdGroupId } from './ads/adConstants';
-import { templates, createEmptyGraph } from './app/onboarding/templates';
+import { createEmptyGraph, templates } from './app/onboarding/templates';
 import { exportGraphPng, shareGraph } from './app/share/share';
 import {
   addEdge,
@@ -70,9 +70,7 @@ function FlowShapeNode(props: NodeProps<FlowNodeData>) {
   );
 }
 
-const nodeTypes = {
-  flowShape: FlowShapeNode
-};
+const nodeTypes = { flowShape: FlowShapeNode };
 
 function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0].id);
@@ -95,15 +93,11 @@ function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) 
     onComplete(graph);
   };
 
-  const startEmpty = () => {
-    onComplete(createEmptyGraph());
-  };
-
   return (
     <section className="onboarding">
-      <h1>Money Flow 시작하기</h1>
-      <p>3분 안에 내 돈 흐름 구조를 만들 수 있어요.</p>
-      <div className="template-grid">
+      <h1>Money Flow</h1>
+      <p className="muted">3분 안에 내 돈 흐름 구조를 만들어요.</p>
+      <div className="template-list">
         {templates.map((template) => (
           <button
             key={template.id}
@@ -116,7 +110,7 @@ function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) 
           </button>
         ))}
       </div>
-      <div className="rename-grid">
+      <div className="rename-list">
         {preview.nodes.map((node) => (
           <label key={node.id}>
             {NODE_TYPE_LABEL[node.type]}
@@ -130,9 +124,9 @@ function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) 
       </div>
       <div className="onboarding-actions">
         <button type="button" className="btn btn-primary" onClick={startTemplate}>
-          이 템플릿으로 시작
+          템플릿으로 시작
         </button>
-        <button type="button" className="btn btn-weak" onClick={startEmpty}>
+        <button type="button" className="btn btn-weak" onClick={() => onComplete(createEmptyGraph())}>
           빈 화면에서 시작
         </button>
       </div>
@@ -145,19 +139,46 @@ type Selection =
   | { kind: 'edge'; value: FlowEdge }
   | { kind: 'none' };
 
+function BottomSheet({
+  open,
+  title,
+  onClose,
+  children
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="sheet-overlay" role="presentation" onClick={onClose}>
+      <section className="sheet" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+        <header className="sheet-header">
+          <strong>{title}</strong>
+          <button type="button" className="btn btn-weak" onClick={onClose}>
+            닫기
+          </button>
+        </header>
+        <div className="sheet-body">{children}</div>
+      </section>
+    </div>
+  );
+}
+
 function AppBody() {
   const [history, setHistory] = useState<GraphHistoryState | null>(null);
   const [selection, setSelection] = useState<Selection>({ kind: 'none' });
   const [newNodeName, setNewNodeName] = useState('');
   const [newNodeType, setNewNodeType] = useState<NodeType>('expense_category');
   const [message, setMessage] = useState('');
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const loaded = loadGraph();
-    if (loaded) {
-      setHistory(createHistory(loaded));
-    }
+    if (loaded) setHistory(createHistory(loaded));
   }, []);
 
   useEffect(() => {
@@ -190,10 +211,6 @@ function AppBody() {
     }));
   }, [graph]);
 
-  const initFromTemplateNodes = (graphToStart: FlowGraph) => {
-    setHistory(createHistory(graphToStart));
-  };
-
   const cycleTheme = () => {
     if (!history) return;
     const order: ThemeName[] = ['calm-mint', 'deep-ocean', 'warm-sand'];
@@ -208,11 +225,12 @@ function AppBody() {
       const next = addNode(history, {
         type: newNodeType,
         name: newNodeName,
-        x: 120 + Math.round(Math.random() * 300),
-        y: 120 + Math.round(Math.random() * 200)
+        x: 120 + Math.round(Math.random() * 240),
+        y: 100 + Math.round(Math.random() * 320)
       });
       setHistory(next);
       setNewNodeName('');
+      setComposerOpen(false);
       setMessage('노드를 추가했어요.');
     } catch (error) {
       setMessage((error as Error).message);
@@ -268,7 +286,7 @@ function AppBody() {
   if (!history) {
     return (
       <main className="app-shell theme-calm-mint">
-        <Onboarding onComplete={initFromTemplateNodes} />
+        <Onboarding onComplete={(graphToStart) => setHistory(createHistory(graphToStart))} />
       </main>
     );
   }
@@ -276,16 +294,16 @@ function AppBody() {
   return (
     <main className={`app-shell ${themeClass}`}>
       <header className="topbar">
-        <div>
+        <div className="brand">
           <h1>Money Flow</h1>
-          <p className="env-badge">{env.toUpperCase()}</p>
+          <span className="env-badge">{env.toUpperCase()}</span>
         </div>
         <div className="top-actions">
           <button type="button" className="btn btn-weak" onClick={cycleTheme}>
-            테마: {THEMES[history.present.settings.theme].title}
+            테마
           </button>
           <button type="button" className="btn btn-weak" onClick={handleExport}>
-            PNG 저장
+            PNG
           </button>
           <button type="button" className="btn btn-primary" onClick={handleShare}>
             공유
@@ -293,204 +311,219 @@ function AppBody() {
         </div>
       </header>
 
-      <section className="layout">
-        <div className="canvas-wrap" id="flow-canvas">
-          <ReactFlow
-            nodes={rfNodes}
-            edges={rfEdges}
-            nodeTypes={nodeTypes}
-            onConnect={onConnect}
-            onNodeClick={(_, node) => {
-              const selected = history.present.nodes.find((item) => item.id === node.id);
-              if (selected) setSelection({ kind: 'node', value: selected });
-            }}
-            onNodeDragStop={(_, node) => applyNodePosition(node.id, node.position.x, node.position.y)}
-            onEdgeClick={(_, edge) => {
-              const selected = history.present.edges.find((item) => item.id === edge.id);
-              if (selected) setSelection({ kind: 'edge', value: selected });
-            }}
-            fitView
-          >
-            <Background />
-            <MiniLegend />
-            <Controls />
-          </ReactFlow>
-          <section className="composer">
-            <h3>빠른 추가</h3>
-            <label>
-              타입
-              <select value={newNodeType} onChange={(event) => setNewNodeType(event.target.value as NodeType)}>
-                {NODE_TYPE_OPTIONS.map(([type, label]) => (
-                  <option key={type} value={type}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <section className="canvas-wrap" id="flow-canvas">
+        <ReactFlow
+          nodes={rfNodes}
+          edges={rfEdges}
+          nodeTypes={nodeTypes}
+          onConnect={onConnect}
+          onNodeClick={(_, node) => {
+            const selected = history.present.nodes.find((item) => item.id === node.id);
+            if (!selected) return;
+            setSelection({ kind: 'node', value: selected });
+            setDetailOpen(true);
+          }}
+          onNodeDragStop={(_, node) => applyNodePosition(node.id, node.position.x, node.position.y)}
+          onEdgeClick={(_, edge) => {
+            const selected = history.present.edges.find((item) => item.id === edge.id);
+            if (!selected) return;
+            setSelection({ kind: 'edge', value: selected });
+            setDetailOpen(true);
+          }}
+          fitView
+        >
+          <Background />
+          <MiniLegend />
+          <Controls />
+        </ReactFlow>
+      </section>
+
+      <div className="fab-dock">
+        <button type="button" className="btn btn-weak" onClick={() => setHistory(undo(history))}>
+          실행취소
+        </button>
+        <button type="button" className="btn btn-weak" onClick={() => setHistory(redo(history))}>
+          다시실행
+        </button>
+        <button type="button" className="btn btn-primary" onClick={() => setComposerOpen(true)}>
+          노드 추가
+        </button>
+        <button
+          type="button"
+          className="btn btn-weak"
+          disabled={selection.kind === 'none'}
+          onClick={() => setDetailOpen(true)}
+        >
+          선택 상세
+        </button>
+      </div>
+
+      <BottomSheet open={composerOpen} title="빠른 노드 추가" onClose={() => setComposerOpen(false)}>
+        <div className="sheet-form">
+          <label>
+            타입
+            <select value={newNodeType} onChange={(event) => setNewNodeType(event.target.value as NodeType)}>
+              {NODE_TYPE_OPTIONS.map(([type, label]) => (
+                <option key={type} value={type}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            이름
+            <input
+              value={newNodeName}
+              onChange={(event) => setNewNodeName(event.target.value)}
+              placeholder="예: 생활비 통장"
+              maxLength={30}
+            />
+          </label>
+          <button type="button" className="btn btn-primary" onClick={handleAddNode}>
+            추가
+          </button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={detailOpen && selection.kind !== 'none'} title="선택 상세" onClose={() => setDetailOpen(false)}>
+        {selection.kind === 'none' && <p className="muted">노드나 연결선을 눌러 선택해 주세요.</p>}
+
+        {selection.kind === 'node' && (
+          <div className="sheet-form">
+            <p>타입: {NODE_TYPE_LABEL[selection.value.type]}</p>
             <label>
               이름
               <input
-                value={newNodeName}
-                onChange={(event) => setNewNodeName(event.target.value)}
-                maxLength={30}
-                placeholder="예: 카카오뱅크 생활비 통장"
+                value={selection.value.name}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setSelection((prev) => (prev.kind === 'node' ? { ...prev, value: { ...prev.value, name: value } } : prev));
+                }}
               />
             </label>
-            <button type="button" className="btn btn-primary" onClick={handleAddNode}>
-              노드 추가
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                try {
+                  const next = updateNode(history, selection.value.id, { name: selection.value.name });
+                  setHistory(next);
+                  setMessage('노드를 저장했어요.');
+                  setDetailOpen(false);
+                } catch (error) {
+                  setMessage((error as Error).message);
+                }
+              }}
+            >
+              저장
             </button>
-            <div className="undo-redo">
-              <button type="button" className="btn btn-weak" onClick={() => setHistory(undo(history))}>
-                실행취소
-              </button>
-              <button type="button" className="btn btn-weak" onClick={() => setHistory(redo(history))}>
-                다시실행
-              </button>
-            </div>
-          </section>
-        </div>
-
-        <aside className="panel">
-          <h3>상세 패널</h3>
-          {selection.kind === 'none' && <p>노드나 연결선을 누르면 상세 정보가 보여요.</p>}
-
-          {selection.kind === 'node' && (
-            <div className="detail-card">
-              <p>타입: {NODE_TYPE_LABEL[selection.value.type]}</p>
-              <label>
-                이름
-                <input
-                  value={selection.value.name}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setSelection((prev) => (prev.kind === 'node' ? { ...prev, value: { ...prev.value, name: value } } : prev));
-                  }}
-                />
-              </label>
-              <div className="panel-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    try {
-                      const next = updateNode(history, selection.value.id, { name: selection.value.name });
-                      setHistory(next);
-                      setMessage('노드 정보를 저장했어요.');
-                    } catch (error) {
-                      setMessage((error as Error).message);
-                    }
-                  }}
-                >
-                  저장
-                </button>
-                <button type="button" className="btn btn-danger" onClick={() => setDeleteConfirm(true)}>
-                  삭제
-                </button>
-              </div>
-              {deleteConfirm && (
-                <div className="confirm-box">
-                  <p>연결된 엣지도 함께 삭제됩니다.</p>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => {
-                      setHistory(removeNode(history, selection.value.id));
-                      setSelection({ kind: 'none' });
-                      setDeleteConfirm(false);
-                    }}
-                  >
-                    삭제 진행
-                  </button>
-                  <button type="button" className="btn btn-weak" onClick={() => setDeleteConfirm(false)}>
-                    취소
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {selection.kind === 'edge' && (
-            <div className="detail-card">
-              <p>타입: {EDGE_TYPE_LABEL[selection.value.type]}</p>
-              <p>
-                유효 연결:
-                {(() => {
-                  const source = history.present.nodes.find((node) => node.id === selection.value.sourceId);
-                  const target = history.present.nodes.find((node) => node.id === selection.value.targetId);
-                  if (!source || !target) return '오류';
-                  return resolveEdgeType(source.type, target.type) ? '정상' : '비정상';
-                })()}
-              </p>
-              <label>
-                라벨
-                <input
-                  value={selection.value.label ?? ''}
-                  onChange={(event) =>
-                    setSelection((prev) =>
-                      prev.kind === 'edge' ? { ...prev, value: { ...prev.value, label: event.target.value } } : prev
-                    )
-                  }
-                />
-              </label>
-              <label>
-                메모
-                <input
-                  value={selection.value.memo ?? ''}
-                  onChange={(event) =>
-                    setSelection((prev) =>
-                      prev.kind === 'edge' ? { ...prev, value: { ...prev.value, memo: event.target.value } } : prev
-                    )
-                  }
-                />
-              </label>
-              <label className="switch-row">
-                활성
-                <input
-                  type="checkbox"
-                  checked={selection.value.active}
-                  onChange={(event) =>
-                    setSelection((prev) =>
-                      prev.kind === 'edge' ? { ...prev, value: { ...prev.value, active: event.target.checked } } : prev
-                    )
-                  }
-                />
-              </label>
-              <div className="panel-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    try {
-                      setHistory(
-                        updateEdge(history, selection.value.id, {
-                          label: selection.value.label,
-                          memo: selection.value.memo,
-                          active: selection.value.active
-                        })
-                      );
-                      setMessage('엣지 정보를 저장했어요.');
-                    } catch (error) {
-                      setMessage((error as Error).message);
-                    }
-                  }}
-                >
-                  저장
-                </button>
+            <button type="button" className="btn btn-danger" onClick={() => setDeleteConfirm(true)}>
+              노드 삭제
+            </button>
+            {deleteConfirm && (
+              <div className="confirm-box">
+                <p>연결된 엣지도 함께 삭제돼요.</p>
                 <button
                   type="button"
                   className="btn btn-danger"
                   onClick={() => {
-                    setHistory(removeEdge(history, selection.value.id));
+                    setHistory(removeNode(history, selection.value.id));
                     setSelection({ kind: 'none' });
+                    setDeleteConfirm(false);
+                    setDetailOpen(false);
                   }}
                 >
-                  삭제
+                  삭제 진행
+                </button>
+                <button type="button" className="btn btn-weak" onClick={() => setDeleteConfirm(false)}>
+                  취소
                 </button>
               </div>
-            </div>
-          )}
-        </aside>
-      </section>
+            )}
+          </div>
+        )}
+
+        {selection.kind === 'edge' && (
+          <div className="sheet-form">
+            <p>타입: {EDGE_TYPE_LABEL[selection.value.type]}</p>
+            <p className="muted">
+              연결 규칙:
+              {(() => {
+                const source = history.present.nodes.find((node) => node.id === selection.value.sourceId);
+                const target = history.present.nodes.find((node) => node.id === selection.value.targetId);
+                if (!source || !target) return '오류';
+                return resolveEdgeType(source.type, target.type) ? '정상' : '비정상';
+              })()}
+            </p>
+            <label>
+              라벨
+              <input
+                value={selection.value.label ?? ''}
+                onChange={(event) =>
+                  setSelection((prev) =>
+                    prev.kind === 'edge' ? { ...prev, value: { ...prev.value, label: event.target.value } } : prev
+                  )
+                }
+              />
+            </label>
+            <label>
+              메모
+              <input
+                value={selection.value.memo ?? ''}
+                onChange={(event) =>
+                  setSelection((prev) =>
+                    prev.kind === 'edge' ? { ...prev, value: { ...prev.value, memo: event.target.value } } : prev
+                  )
+                }
+              />
+            </label>
+            <label className="switch-row">
+              활성
+              <input
+                type="checkbox"
+                checked={selection.value.active}
+                onChange={(event) =>
+                  setSelection((prev) =>
+                    prev.kind === 'edge' ? { ...prev, value: { ...prev.value, active: event.target.checked } } : prev
+                  )
+                }
+              />
+            </label>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                try {
+                  setHistory(
+                    updateEdge(history, selection.value.id, {
+                      label: selection.value.label,
+                      memo: selection.value.memo,
+                      active: selection.value.active
+                    })
+                  );
+                  setMessage('엣지를 저장했어요.');
+                  setDetailOpen(false);
+                } catch (error) {
+                  setMessage((error as Error).message);
+                }
+              }}
+            >
+              저장
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => {
+                setHistory(removeEdge(history, selection.value.id));
+                setSelection({ kind: 'none' });
+                setDetailOpen(false);
+              }}
+            >
+              엣지 삭제
+            </button>
+          </div>
+        )}
+      </BottomSheet>
 
       {message && <div className="toast">{message}</div>}
 
