@@ -37,6 +37,8 @@ interface FlowNodeData {
   type: NodeType;
 }
 
+type LayoutPattern = 'circuit' | 'pipe' | 'radial';
+
 const THEMES: Record<ThemeName, { title: string; className: string }> = {
   'calm-mint': { title: 'Calm Mint', className: 'theme-calm-mint' },
   'deep-ocean': { title: 'Deep Ocean', className: 'theme-deep-ocean' },
@@ -44,6 +46,11 @@ const THEMES: Record<ThemeName, { title: string; className: string }> = {
 };
 
 const NODE_TYPE_OPTIONS = Object.entries(NODE_TYPE_LABEL) as Array<[NodeType, string]>;
+const LAYOUT_NAMES: Record<LayoutPattern, string> = {
+  circuit: '회로형',
+  pipe: '배선형',
+  radial: '허브형'
+};
 
 function nodeClass(type: NodeType): string {
   switch (type) {
@@ -72,6 +79,120 @@ function FlowShapeNode(props: NodeProps<FlowNodeData>) {
 
 const nodeTypes = { flowShape: FlowShapeNode };
 
+function toTypeRank(type: NodeType): number {
+  switch (type) {
+    case 'income_source':
+      return 0;
+    case 'asset_account':
+      return 1;
+    case 'payment_instrument':
+      return 2;
+    case 'expense_category':
+      return 3;
+    case 'liability_bucket':
+      return 4;
+  }
+}
+
+function uniqueByType(nodes: FlowNode[], type: NodeType): FlowNode[] {
+  return nodes.filter((node) => node.type === type);
+}
+
+function applyLayout(graph: FlowGraph, pattern: LayoutPattern): FlowGraph {
+  const nextNodes = [...graph.nodes].sort((a, b) => {
+    const rankDiff = toTypeRank(a.type) - toTypeRank(b.type);
+    return rankDiff !== 0 ? rankDiff : a.name.localeCompare(b.name);
+  });
+
+  if (pattern === 'circuit') {
+    const typeX: Record<NodeType, number> = {
+      income_source: 36,
+      asset_account: 126,
+      payment_instrument: 216,
+      expense_category: 306,
+      liability_bucket: 306
+    };
+    const typeOffset: Record<NodeType, number> = {
+      income_source: 0,
+      asset_account: 0,
+      payment_instrument: 20,
+      expense_category: 0,
+      liability_bucket: 120
+    };
+    const counters: Record<NodeType, number> = {
+      income_source: 0,
+      asset_account: 0,
+      payment_instrument: 0,
+      expense_category: 0,
+      liability_bucket: 0
+    };
+
+    return {
+      ...graph,
+      nodes: nextNodes.map((node) => {
+        const index = counters[node.type];
+        counters[node.type] += 1;
+        return {
+          ...node,
+          ui: {
+            ...node.ui,
+            x: typeX[node.type],
+            y: 70 + typeOffset[node.type] + index * 94
+          }
+        };
+      })
+    };
+  }
+
+  if (pattern === 'pipe') {
+    return {
+      ...graph,
+      nodes: nextNodes.map((node, index) => ({
+        ...node,
+        ui: {
+          ...node.ui,
+          x: index % 2 === 0 ? 66 : 258,
+          y: 60 + index * 84
+        }
+      }))
+    };
+  }
+
+  const assets = uniqueByType(nextNodes, 'asset_account');
+  const centerNode = assets[0] ?? nextNodes[0];
+  const others = nextNodes.filter((node) => node.id !== centerNode?.id);
+  const center = { x: 180, y: 260 };
+  const radiusX = 130;
+  const radiusY = 190;
+
+  const radialNodes = others.map((node, index) => {
+    const angle = (Math.PI * 2 * index) / Math.max(others.length, 1);
+    return {
+      ...node,
+      ui: {
+        ...node.ui,
+        x: Math.round(center.x + Math.cos(angle) * radiusX),
+        y: Math.round(center.y + Math.sin(angle) * radiusY)
+      }
+    };
+  });
+
+  if (!centerNode) {
+    return { ...graph, nodes: radialNodes };
+  }
+
+  return {
+    ...graph,
+    nodes: [{ ...centerNode, ui: { ...centerNode.ui, ...center } }, ...radialNodes]
+  };
+}
+
+function buildDefaultNodeName(nodes: FlowNode[], type: NodeType): string {
+  const baseLabel = NODE_TYPE_LABEL[type];
+  const number = nodes.filter((node) => node.type === type).length + 1;
+  return `${baseLabel} ${number}`;
+}
+
 function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0].id);
   const [renameMap, setRenameMap] = useState<Record<string, string>>({});
@@ -81,22 +202,20 @@ function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) 
 
   useEffect(() => {
     const defaults: Record<string, string> = {};
-    for (const node of preview.nodes) {
-      defaults[node.id] = node.name;
-    }
+    for (const node of preview.nodes) defaults[node.id] = node.name;
     setRenameMap(defaults);
   }, [selectedTemplateId]);
 
   const startTemplate = () => {
     const graph = selectedTemplate.createGraph();
     graph.nodes = graph.nodes.map((node) => ({ ...node, name: renameMap[node.id]?.trim() || node.name }));
-    onComplete(graph);
+    onComplete(applyLayout(graph, 'circuit'));
   };
 
   return (
     <section className="onboarding">
       <h1>Money Flow</h1>
-      <p className="muted">3분 안에 내 돈 흐름 구조를 만들어요.</p>
+      <p className="muted">모바일에서 보기 편한 구조로 시작해요.</p>
       <div className="template-list">
         {templates.map((template) => (
           <button
@@ -127,7 +246,7 @@ function Onboarding({ onComplete }: { onComplete: (graph: FlowGraph) => void }) 
           템플릿으로 시작
         </button>
         <button type="button" className="btn btn-weak" onClick={() => onComplete(createEmptyGraph())}>
-          빈 화면에서 시작
+          빈 화면으로 시작
         </button>
       </div>
     </section>
@@ -175,10 +294,13 @@ function AppBody() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [layoutPattern, setLayoutPattern] = useState<LayoutPattern>('circuit');
+  const [nodesLocked, setNodesLocked] = useState(true);
 
   useEffect(() => {
     const loaded = loadGraph();
-    if (loaded) setHistory(createHistory(loaded));
+    if (!loaded) return;
+    setHistory(createHistory(loaded));
   }, []);
 
   useEffect(() => {
@@ -219,16 +341,25 @@ function AppBody() {
     setHistory(replaceGraph(history, { ...history.present, settings: { ...history.present.settings, theme: next } }));
   };
 
+  const handleLayoutApply = (pattern: LayoutPattern) => {
+    if (!history) return;
+    setLayoutPattern(pattern);
+    setHistory(replaceGraph(history, applyLayout(history.present, pattern)));
+    setMessage(`${LAYOUT_NAMES[pattern]} 정렬로 맞췄어요.`);
+  };
+
   const handleAddNode = () => {
     if (!history) return;
     try {
-      const next = addNode(history, {
+      const name = newNodeName.trim() || buildDefaultNodeName(history.present.nodes, newNodeType);
+      let nextHistory = addNode(history, {
         type: newNodeType,
-        name: newNodeName,
-        x: 120 + Math.round(Math.random() * 240),
-        y: 100 + Math.round(Math.random() * 320)
+        name,
+        x: 180,
+        y: 250
       });
-      setHistory(next);
+      nextHistory = replaceGraph(nextHistory, applyLayout(nextHistory.present, layoutPattern));
+      setHistory(nextHistory);
       setNewNodeName('');
       setComposerOpen(false);
       setMessage('노드를 추가했어요.');
@@ -256,7 +387,7 @@ function AppBody() {
   );
 
   const applyNodePosition = (nodeId: string, x: number, y: number) => {
-    if (!history) return;
+    if (!history || nodesLocked) return;
     const node = history.present.nodes.find((item) => item.id === nodeId);
     if (!node) return;
     setHistory(updateNode(history, nodeId, { ui: { ...node.ui, x, y } }));
@@ -277,7 +408,7 @@ function AppBody() {
     if (!canvas) return;
     try {
       await exportGraphPng(canvas);
-      setMessage('PNG를 저장했어요.');
+      setMessage('PNG 저장을 완료했어요.');
     } catch {
       setMessage('PNG 저장에 실패했어요.');
     }
@@ -330,6 +461,8 @@ function AppBody() {
             setSelection({ kind: 'edge', value: selected });
             setDetailOpen(true);
           }}
+          nodesDraggable={!nodesLocked}
+          preventScrolling={false}
           fitView
         >
           <Background />
@@ -348,13 +481,28 @@ function AppBody() {
         <button type="button" className="btn btn-primary" onClick={() => setComposerOpen(true)}>
           노드 추가
         </button>
+        <button type="button" className="btn btn-weak" disabled={selection.kind === 'none'} onClick={() => setDetailOpen(true)}>
+          선택 상세
+        </button>
+        <button type="button" className="btn btn-weak" onClick={() => handleLayoutApply('circuit')}>
+          회로형
+        </button>
+        <button type="button" className="btn btn-weak" onClick={() => handleLayoutApply('pipe')}>
+          배선형
+        </button>
+        <button type="button" className="btn btn-weak" onClick={() => handleLayoutApply('radial')}>
+          허브형
+        </button>
         <button
           type="button"
           className="btn btn-weak"
-          disabled={selection.kind === 'none'}
-          onClick={() => setDetailOpen(true)}
+          onClick={() => {
+            const next = !nodesLocked;
+            setNodesLocked(next);
+            setMessage(next ? '노드 이동 잠금' : '노드 이동 잠금 해제');
+          }}
         >
-          선택 상세
+          {nodesLocked ? '잠금' : '이동 가능'}
         </button>
       </div>
 
@@ -375,7 +523,7 @@ function AppBody() {
             <input
               value={newNodeName}
               onChange={(event) => setNewNodeName(event.target.value)}
-              placeholder="예: 생활비 통장"
+              placeholder="비워두면 자동 이름 생성"
               maxLength={30}
             />
           </label>
@@ -386,7 +534,7 @@ function AppBody() {
       </BottomSheet>
 
       <BottomSheet open={detailOpen && selection.kind !== 'none'} title="선택 상세" onClose={() => setDetailOpen(false)}>
-        {selection.kind === 'none' && <p className="muted">노드나 연결선을 눌러 선택해 주세요.</p>}
+        {selection.kind === 'none' && <p className="muted">노드나 연결선을 누르면 상세 정보를 볼 수 있어요.</p>}
 
         {selection.kind === 'node' && (
           <div className="sheet-form">
@@ -408,7 +556,7 @@ function AppBody() {
                 try {
                   const next = updateNode(history, selection.value.id, { name: selection.value.name });
                   setHistory(next);
-                  setMessage('노드를 저장했어요.');
+                  setMessage('노드 이름을 저장했어요.');
                   setDetailOpen(false);
                 } catch (error) {
                   setMessage((error as Error).message);
@@ -422,7 +570,7 @@ function AppBody() {
             </button>
             {deleteConfirm && (
               <div className="confirm-box">
-                <p>연결된 엣지도 함께 삭제돼요.</p>
+                <p>연결된 선도 함께 삭제됩니다.</p>
                 <button
                   type="button"
                   className="btn btn-danger"
@@ -501,7 +649,7 @@ function AppBody() {
                       active: selection.value.active
                     })
                   );
-                  setMessage('엣지를 저장했어요.');
+                  setMessage('엣지 정보를 저장했어요.');
                   setDetailOpen(false);
                 } catch (error) {
                   setMessage((error as Error).message);
@@ -556,3 +704,4 @@ export function App() {
     </ReactFlowProvider>
   );
 }
+

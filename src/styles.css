@@ -103,6 +103,11 @@ body {
   gap: 6px;
 }
 
+.top-actions .btn {
+  font-size: 13px;
+  padding: 9px 10px;
+}
+
 .canvas-wrap {
   flex: 1;
   margin: 10px 10px 0;
@@ -137,16 +142,16 @@ body {
   bottom: calc(114px + env(safe-area-inset-bottom));
   z-index: 18;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
 .btn {
   border: none;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 11px 12px;
+  padding: 10px 8px;
   cursor: pointer;
 }
 
