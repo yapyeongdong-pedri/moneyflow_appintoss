@@ -320,19 +320,11 @@ function AppBody() {
     const activeEdges = graph.edges.filter((e) => e.active);
     const relatedNodes = new Set<string>([selection.value.id]);
     const relatedEdges = new Set<string>();
-    const queue: string[] = [selection.value.id];
-    while (queue.length) {
-      const current = queue.shift() as string;
-      for (const edge of activeEdges) {
-        const linked = edge.sourceId === current || edge.targetId === current;
-        if (!linked) continue;
-        relatedEdges.add(edge.id);
-        const nextId = edge.sourceId === current ? edge.targetId : edge.sourceId;
-        if (!relatedNodes.has(nextId)) {
-          relatedNodes.add(nextId);
-          queue.push(nextId);
-        }
-      }
+    for (const edge of activeEdges) {
+      if (edge.sourceId !== selection.value.id && edge.targetId !== selection.value.id) continue;
+      relatedEdges.add(edge.id);
+      relatedNodes.add(edge.sourceId);
+      relatedNodes.add(edge.targetId);
     }
     return { relatedNodes, relatedEdges };
   }, [graph, selection]);
@@ -350,7 +342,11 @@ function AppBody() {
     type: 'flowShape',
     sourcePosition: Position.Bottom,
     targetPosition: Position.Top,
-    style: highlighted && !highlighted.relatedNodes.has(n.id) ? { opacity: 0.2 } : undefined,
+    style: highlighted && !highlighted.relatedNodes.has(n.id)
+      ? { opacity: 0.18, filter: 'grayscale(0.25)' }
+      : highlighted && selection.kind === 'node' && selection.value.id === n.id
+        ? { opacity: 1, filter: 'drop-shadow(0 0 4px rgba(20, 125, 233, 0.4))' }
+        : undefined,
     data: {
       label: n.name,
       type: n.type,
@@ -370,6 +366,7 @@ function AppBody() {
     const toExpense = targetType === 'expense_category';
     const sourceTop = sourceNode?.type === 'salary_account' && !!targetNode && isUpperAsset(targetNode);
     const dimmed = !!highlighted && !highlighted.relatedEdges.has(e.id);
+    const emphasized = !!highlighted && highlighted.relatedEdges.has(e.id);
     return ({
     id: e.id,
     source: e.sourceId,
@@ -377,7 +374,12 @@ function AppBody() {
     sourceHandle: sourceTop ? 'source-top' : 'source-bottom',
     targetHandle: sourceTop ? 'target-bottom' : 'target-top',
     type: 'default',
-    markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: e.active ? '#2f6f9f' : '#8fa9be' },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: emphasized ? 18 : 16,
+      height: emphasized ? 18 : 16,
+      color: emphasized ? '#147de9' : e.active ? '#2f6f9f' : '#8fa9be'
+    },
     style: e.active
       ? {
           strokeWidth: 2.4,
@@ -385,7 +387,8 @@ function AppBody() {
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           strokeDasharray: toExpense ? '6 5' : undefined,
-          opacity: dimmed ? 0.16 : 1
+          opacity: dimmed ? 0.1 : 1,
+          strokeWidth: emphasized ? 3.2 : 2.4
         }
       : {
           opacity: dimmed ? 0.12 : 0.35,
