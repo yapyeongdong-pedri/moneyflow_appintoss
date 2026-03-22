@@ -91,7 +91,11 @@ function starterGraph(): FlowGraph {
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
   const rowY: Record<string, number> = {
-    salary_account: 76,`r`n    asset_account: 300,`r`n    payment_instrument: 620,`r`n    expense_category: 940,`r`n    other: 1260
+    salary_account: 76,
+    asset_account: 300,
+    payment_instrument: 620,
+    expense_category: 940,
+    other: 1260
   };
 
   const incoming = new Map<string, string[]>();
