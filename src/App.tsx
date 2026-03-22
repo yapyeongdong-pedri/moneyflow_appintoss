@@ -211,7 +211,8 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       const preferredX = parents.length
         ? parents.reduce((sum, id) => sum + (xById.get(id) ?? CANVAS_CENTER_X), 0) / parents.length
         : CANVAS_CENTER_X;
-      return { node, preferredX };
+      const primaryParentX = parents.length ? (xById.get(parents[0]) ?? preferredX) : preferredX;
+      return { node, parents, preferredX, primaryParentX };
     }).sort((a, b) => {
       if (Math.abs(a.preferredX - b.preferredX) > 1) return a.preferredX - b.preferredX;
       return a.node.name.localeCompare(b.node.name);
@@ -219,21 +220,53 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
 
     const xs = slotX(withPreferred.length);
     const available = [...xs];
-    withPreferred.forEach(({ node, preferredX }) => {
-      let bestIdx = 0;
-      let bestDist = Math.abs(available[0] - preferredX);
-      for (let i = 1; i < available.length; i += 1) {
-        const dist = Math.abs(available[i] - preferredX);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = i;
+    const assigned = new Set<string>();
+
+    const assignGreedy = (
+      items: Array<{ node: FlowNode; preferredX: number; primaryParentX: number }>,
+      targetX: (item: { node: FlowNode; preferredX: number; primaryParentX: number }) => number
+    ) => {
+      const pending = [...items];
+      while (pending.length && available.length) {
+        let bestItemIdx = 0;
+        let bestSlotIdx = 0;
+        let bestDist = Number.POSITIVE_INFINITY;
+
+        for (let i = 0; i < pending.length; i += 1) {
+          const target = targetX(pending[i]);
+          for (let j = 0; j < available.length; j += 1) {
+            const dist = Math.abs(available[j] - target);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestItemIdx = i;
+              bestSlotIdx = j;
+            }
+          }
         }
+
+        const item = pending[bestItemIdx];
+        const x = available[bestSlotIdx];
+        available.splice(bestSlotIdx, 1);
+        pending.splice(bestItemIdx, 1);
+        assigned.add(item.node.id);
+        xById.set(item.node.id, x);
+        item.node.ui = { ...item.node.ui, x, y: yPos };
       }
-      const x = available[bestIdx];
-      available.splice(bestIdx, 1);
-      xById.set(node.id, x);
-      node.ui = { ...node.ui, x, y: yPos };
-    });
+    };
+
+    const singleParent = withPreferred.filter((item) => item.parents.length === 1);
+    const multiParent = withPreferred.filter((item) => item.parents.length > 1);
+    const noParent = withPreferred.filter((item) => item.parents.length === 0);
+
+    // 1) 상위 노드 바로 아래 정렬을 우선 적용
+    assignGreedy(singleParent, (item) => item.primaryParentX);
+    // 2) 다중 부모는 평균 축에 최대한 맞춤
+    assignGreedy(multiParent, (item) => item.preferredX);
+    // 3) 마지막으로 남는 슬롯에 부모 없는 노드를 배치
+    assignGreedy(noParent, (item) => item.preferredX);
+
+    const leftovers = withPreferred.filter((item) => !assigned.has(item.node.id));
+    assignGreedy(leftovers, (item) => item.preferredX);
   };
 
   for (const row of rowKeys) {
