@@ -11,7 +11,9 @@ import { loadGraph, saveGraph } from './infra/storage';
 interface FlowNodeData {
   label: string;
   type: NodeType;
-  topLabel?: string;
+  purpose?: string;
+  institution?: string;
+  typeTag?: string;
   subtype?: string;
 }
 
@@ -45,13 +47,19 @@ function nodeClass(type: NodeType, subtype?: string): string {
 }
 
 function FlowShapeNode(props: NodeProps<FlowNodeData>) {
-  const { type, topLabel, label, subtype } = props.data;
+  const { type, label, subtype, purpose, institution, typeTag } = props.data;
   return (
     <div className="node-wrap">
-      {topLabel && <div className="node-top-label">{topLabel}</div>}
       <div className={nodeClass(type, subtype)}>
+        {typeTag && <span className="node-type-tag">{typeTag}</span>}
+        {(purpose || institution) && (
+          <div className="node-meta-inline">
+            <strong>{purpose ?? label}</strong>
+            {institution && <small>({institution})</small>}
+          </div>
+        )}
         {type !== 'salary_account' && <Handle type="target" position={Position.Top} />}
-        <span>{label}</span>
+        <span className="node-main-label">{label}</span>
         {type !== 'expense_category' && <Handle type="source" position={Position.Bottom} />}
       </div>
     </div>
@@ -79,87 +87,69 @@ function starterGraph(): FlowGraph {
   };
 }
 
-function rank(node: FlowNode): number {
-  if (node.type === 'salary_account') return 0;
-  if (node.type === 'asset_account') return 1;
-  if (node.type === 'payment_instrument') return 2;
-  if (node.type === 'expense_category') return 3;
-  return 4;
-}
-
-function xSlots(cols: number): number[] {
-  if (cols <= 1) return [148];
-  if (cols === 2) return [72, 224];
-  if (cols === 3) return [24, 148, 272];
-  return [18, 106, 194, 282];
-}
-
 function prettyLayout(graph: FlowGraph): FlowGraph {
-  const root = graph.nodes.find((n) => n.type === 'salary_account') ?? graph.nodes[0];
-  if (!root) return graph;
+  const rowY: Record<string, number> = {
+    salary_account: 68,
+    asset_account: 256,
+    payment_instrument: 444,
+    expense_category: 632,
+    other: 820
+  };
 
-  const out = new Map<string, string[]>();
   const incoming = new Map<string, string[]>();
-  for (const e of graph.edges) {
-    if (!e.active) continue;
-    const o = out.get(e.sourceId) ?? [];
-    o.push(e.targetId);
-    out.set(e.sourceId, o);
-    const i = incoming.get(e.targetId) ?? [];
-    i.push(e.sourceId);
-    incoming.set(e.targetId, i);
+  const xById = new Map<string, number>();
+  for (const edge of graph.edges) {
+    if (!edge.active) continue;
+    const list = incoming.get(edge.targetId) ?? [];
+    list.push(edge.sourceId);
+    incoming.set(edge.targetId, list);
   }
 
-  const depth = new Map<string, number>([[root.id, 0]]);
-  const q = [root.id];
-  while (q.length) {
-    const id = q.shift()!;
-    const d = depth.get(id) ?? 0;
-    for (const t of out.get(id) ?? []) {
-      if (depth.has(t)) continue;
-      depth.set(t, d + 1);
-      q.push(t);
+  const toRowKey = (node: FlowNode): string => {
+    if (node.type === 'salary_account') return 'salary_account';
+    if (node.type === 'asset_account') return 'asset_account';
+    if (node.type === 'payment_instrument') return 'payment_instrument';
+    if (node.type === 'expense_category') return 'expense_category';
+    return 'other';
+  };
+
+  const rowKeys: string[] = ['salary_account', 'asset_account', 'payment_instrument', 'expense_category', 'other'];
+  const byRow = new Map<string, FlowNode[]>();
+  for (const key of rowKeys) byRow.set(key, []);
+  for (const node of graph.nodes) byRow.get(toRowKey(node))?.push(node);
+
+  const positionRow = (nodes: FlowNode[], y: number) => {
+    if (!nodes.length) return;
+    if (nodes.length === 1) {
+      const only = nodes[0];
+      xById.set(only.id, 148);
+      only.ui = { ...only.ui, x: 148, y };
+      return;
     }
-  }
-
-  let maxDepth = Math.max(...depth.values());
-  for (const n of graph.nodes) {
-    if (depth.has(n.id)) continue;
-    maxDepth += 1;
-    depth.set(n.id, maxDepth);
-  }
-
-  const byDepth = new Map<number, FlowNode[]>();
-  for (const n of graph.nodes) {
-    const d = depth.get(n.id) ?? 1;
-    byDepth.set(d, [...(byDepth.get(d) ?? []), n]);
-  }
-
-  const pos = new Map<string, FlowNode>();
-  pos.set(root.id, { ...root, ui: { ...root.ui, x: 138, y: 60 } });
-
-  for (const d of [...byDepth.keys()].filter((v) => v > 0).sort((a, b) => a - b)) {
-    const nodes = [...(byDepth.get(d) ?? [])].sort((a, b) => {
-      const pa = incoming.get(a.id) ?? [];
-      const pb = incoming.get(b.id) ?? [];
-      const xa = pa.reduce((s, p) => s + (pos.get(p)?.ui?.x ?? 148), 0) / Math.max(pa.length, 1);
-      const xb = pb.reduce((s, p) => s + (pos.get(p)?.ui?.x ?? 148), 0) / Math.max(pb.length, 1);
-      if (Math.abs(xa - xb) > 8) return xa - xb;
-      const rr = rank(a) - rank(b);
-      return rr !== 0 ? rr : a.name.localeCompare(b.name);
-    });
-
-    const cols = nodes.length <= 3 ? Math.max(nodes.length, 1) : nodes.length <= 9 ? 3 : 4;
-    const xs = xSlots(cols);
-    const yBase = 60 + d * 164;
+    const minX = 20;
+    const maxX = 276;
     nodes.forEach((node, index) => {
-      const col = index % cols;
-      const row = Math.floor(index / cols);
-      pos.set(node.id, { ...node, ui: { ...node.ui, x: xs[col], y: yBase + row * 124 } });
+      const x = Math.round(minX + (index * (maxX - minX)) / (nodes.length - 1));
+      xById.set(node.id, x);
+      node.ui = { ...node.ui, x, y };
     });
+  };
+
+  for (const row of rowKeys) {
+    const nodes = byRow.get(row) ?? [];
+    if (!nodes.length) continue;
+    const sorted = [...nodes].sort((a, b) => {
+      const parentsA = incoming.get(a.id) ?? [];
+      const parentsB = incoming.get(b.id) ?? [];
+      const avgXA = parentsA.reduce((sum, id) => sum + (xById.get(id) ?? 148), 0) / Math.max(parentsA.length, 1);
+      const avgXB = parentsB.reduce((sum, id) => sum + (xById.get(id) ?? 148), 0) / Math.max(parentsB.length, 1);
+      if (Math.abs(avgXA - avgXB) > 8) return avgXA - avgXB;
+      return a.name.localeCompare(b.name);
+    });
+    positionRow(sorted, rowY[row]);
   }
 
-  return { ...graph, nodes: graph.nodes.map((n) => pos.get(n.id) ?? n) };
+  return { ...graph, nodes: [...graph.nodes] };
 }
 
 function BottomSheet({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
@@ -235,7 +225,9 @@ function AppBody() {
     data: {
       label: n.name,
       type: n.type,
-      topLabel: n.type === 'asset_account' || n.type === 'payment_instrument' ? `${n.meta?.purpose ?? n.name} (${n.meta?.institution ?? (n.type === 'asset_account' ? '은행' : '카드사')})` : '',
+      purpose: n.type === 'asset_account' || n.type === 'payment_instrument' ? n.meta?.purpose ?? n.name : undefined,
+      institution: n.type === 'asset_account' || n.type === 'payment_instrument' ? n.meta?.institution ?? (n.type === 'asset_account' ? '은행' : '카드사') : undefined,
+      typeTag: n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : undefined,
       subtype: n.meta?.subtype
     }
   })), [graph]);
@@ -245,12 +237,8 @@ function AppBody() {
     source: e.sourceId,
     target: e.targetId,
     type: 'smoothstep',
-    label: e.label ?? '흐름',
     markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: e.active ? '#2f6f9f' : '#8fa9be' },
     pathOptions: { borderRadius: 20, offset: 26 },
-    labelBgPadding: [6, 2],
-    labelBgBorderRadius: 999,
-    labelBgStyle: { fill: '#ffffffcc' },
     style: e.active ? { strokeWidth: 2.4, stroke: '#2f6f9f' } : { opacity: 0.35, strokeWidth: 1.8, stroke: '#8fa9be' },
     animated: false
   })), [graph]);
@@ -264,7 +252,7 @@ function AppBody() {
         if (!accountPurpose.trim() || !accountBank.trim() || !accountLinkSourceId) return setMessage('계좌 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'asset_account', name: accountPurpose.trim(), meta: { subtype: accountSubtype, institution: accountBank.trim(), purpose: accountPurpose.trim(), linkSourceId: accountLinkSourceId, note: accountMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
-        h = addEdge(h, { sourceId: accountLinkSourceId, targetId: node.id, label: '계좌 흐름' });
+        h = addEdge(h, { sourceId: accountLinkSourceId, targetId: node.id });
         setHistory(replaceGraph(h, prettyLayout(h.present)));
         setMessage('계좌 노드를 추가했어요.');
       }
@@ -272,7 +260,7 @@ function AppBody() {
         if (!cardPurpose.trim() || !cardIssuer.trim() || !cardLinkAccountId) return setMessage('카드 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'payment_instrument', name: cardPurpose.trim(), meta: { institution: cardIssuer.trim(), purpose: cardPurpose.trim(), linkSourceId: cardLinkAccountId, note: cardMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
-        h = addEdge(h, { sourceId: cardLinkAccountId, targetId: node.id, label: '카드 연결' });
+        h = addEdge(h, { sourceId: cardLinkAccountId, targetId: node.id });
         setHistory(replaceGraph(h, prettyLayout(h.present)));
         setMessage('카드 노드를 추가했어요.');
       }
@@ -280,7 +268,7 @@ function AppBody() {
         if (!expenseType.trim() || !expenseLinkSourceId) return setMessage('지출 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'expense_category', name: expenseType.trim(), meta: { expenseType: expenseType.trim(), linkSourceId: expenseLinkSourceId, note: expenseMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
-        h = addEdge(h, { sourceId: expenseLinkSourceId, targetId: node.id, label: '지출 흐름' });
+        h = addEdge(h, { sourceId: expenseLinkSourceId, targetId: node.id });
         setHistory(replaceGraph(h, prettyLayout(h.present)));
         setMessage('지출 노드를 추가했어요.');
       }
