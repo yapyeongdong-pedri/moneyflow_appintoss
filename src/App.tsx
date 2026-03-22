@@ -22,9 +22,13 @@ type Selection = { kind: 'node'; value: FlowNode } | { kind: 'none' };
 type ComposerKind = 'account' | 'card' | 'expense';
 type AccountSubtype = 'spending' | 'invest' | 'saving' | 'pension';
 
-const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [356, 5200]];
-const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [356, 5200]];
-const CANVAS_CENTER_X = 178;
+const CANVAS_WIDTH = 356;
+const NODE_BOX_WIDTH = 134;
+const NODE_SIDE_GUTTER = 10;
+const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, 5200]];
+const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, 5200]];
+const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
+const SALARY_X = Math.round(CANVAS_CENTER_X - NODE_BOX_WIDTH / 2);
 const DEFAULT_VIEW_PADDING = 0.38;
 const DEFAULT_VIEW_MAX_ZOOM = 0.56;
 
@@ -71,7 +75,7 @@ function salaryNode(): FlowNode {
     type: 'salary_account',
     name: '월급통장',
     meta: { purpose: '메인 통장', institution: '주거래 은행' },
-    ui: { x: CANVAS_CENTER_X, y: 60 }
+    ui: { x: SALARY_X, y: 60 }
   };
 }
 
@@ -116,9 +120,9 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
   for (const node of graph.nodes) byRow.get(toRowKey(node))?.push(node);
 
   const slotX = (count: number): number[] => {
-    if (count <= 1) return [CANVAS_CENTER_X];
-    const minX = 42;
-    const maxX = 314;
+    if (count <= 1) return [SALARY_X];
+    const minX = NODE_SIDE_GUTTER;
+    const maxX = CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER;
     return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
   };
 
@@ -133,7 +137,7 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       const xs = slotX(lineNodes.length);
       const yPos = y + line * lineGap;
       lineNodes.forEach((node, index) => {
-        const x = rowKey === 'salary_account' ? CANVAS_CENTER_X : xs[index];
+        const x = rowKey === 'salary_account' ? SALARY_X : xs[index];
         xById.set(node.id, x);
         node.ui = { ...node.ui, x, y: yPos };
       });
