@@ -382,7 +382,6 @@ function AppBody() {
     },
     style: e.active
       ? {
-          strokeWidth: 2.4,
           stroke: '#2f6f9f',
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
