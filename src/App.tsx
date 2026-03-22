@@ -181,13 +181,6 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
   for (const key of rowKeys) byRow.set(key, []);
   for (const node of graph.nodes) byRow.get(toRowKey(node))?.push(node);
 
-  const slotX = (count: number): number[] => {
-    if (count <= 1) return [SALARY_X];
-    const minX = NODE_SIDE_GUTTER;
-    const maxX = CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER;
-    return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
-  };
-
   const rowLimit = (rowKey: string): number => {
     if (rowKey === 'salary_account') return 1;
     if (rowKey === 'asset_upper' || rowKey === 'asset_account') return ACCOUNT_ROW_LIMIT;
@@ -218,52 +211,69 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       return a.node.name.localeCompare(b.node.name);
     });
 
-    const xs = slotX(withPreferred.length);
-    const available = [...xs];
+    const minX = NODE_SIDE_GUTTER;
+    const maxX = CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER;
+    const minGap = NODE_BOX_WIDTH + 4;
+    const occupied: number[] = [];
     const assigned = new Set<string>();
 
+    const clampX = (value: number): number => Math.max(minX, Math.min(maxX, Math.round(value)));
+    const canPlace = (x: number): boolean => occupied.every((used) => Math.abs(used - x) >= minGap);
+
+    const findNearestFree = (target: number): number => {
+      const base = clampX(target);
+      if (canPlace(base)) return base;
+
+      const searchLimit = Math.max(1, maxX - minX);
+      for (let step = 1; step <= searchLimit; step += 1) {
+        const left = base - step;
+        if (left >= minX && canPlace(left)) return left;
+        const right = base + step;
+        if (right <= maxX && canPlace(right)) return right;
+      }
+
+      let bestX = base;
+      let bestScore = Number.POSITIVE_INFINITY;
+      for (let x = minX; x <= maxX; x += 1) {
+        const overlapPenalty = occupied.reduce((sum, used) => {
+          const overlap = Math.max(0, minGap - Math.abs(used - x));
+          return sum + overlap;
+        }, 0);
+        const score = Math.abs(x - base) + overlapPenalty * 1000;
+        if (score < bestScore) {
+          bestScore = score;
+          bestX = x;
+        }
+      }
+      return bestX;
+    };
+
     const assignGreedy = (
-      items: Array<{ node: FlowNode; preferredX: number; primaryParentX: number }>,
+      items: Array<{ node: FlowNode; preferredX: number; primaryParentX: number; parents: string[] }>,
       targetX: (item: { node: FlowNode; preferredX: number; primaryParentX: number }) => number
     ) => {
-      const pending = [...items];
-      while (pending.length && available.length) {
-        let bestItemIdx = 0;
-        let bestSlotIdx = 0;
-        let bestDist = Number.POSITIVE_INFINITY;
-
-        for (let i = 0; i < pending.length; i += 1) {
-          const target = targetX(pending[i]);
-          for (let j = 0; j < available.length; j += 1) {
-            const dist = Math.abs(available[j] - target);
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestItemIdx = i;
-              bestSlotIdx = j;
-            }
-          }
-        }
-
-        const item = pending[bestItemIdx];
-        const x = available[bestSlotIdx];
-        available.splice(bestSlotIdx, 1);
-        pending.splice(bestItemIdx, 1);
+      const pending = [...items].sort((a, b) => {
+        const aTarget = targetX(a);
+        const bTarget = targetX(b);
+        if (Math.abs(aTarget - bTarget) > 1) return aTarget - bTarget;
+        return a.node.name.localeCompare(b.node.name);
+      });
+      pending.forEach((item) => {
+        const x = findNearestFree(targetX(item));
+        occupied.push(x);
         assigned.add(item.node.id);
         xById.set(item.node.id, x);
         item.node.ui = { ...item.node.ui, x, y: yPos };
-      }
+      });
     };
 
     const singleParent = withPreferred.filter((item) => item.parents.length === 1);
     const multiParent = withPreferred.filter((item) => item.parents.length > 1);
-    const noParent = withPreferred.filter((item) => item.parents.length === 0);
 
     // 1) 상위 노드 바로 아래 정렬을 우선 적용
     assignGreedy(singleParent, (item) => item.primaryParentX);
     // 2) 다중 부모는 평균 축에 최대한 맞춤
     assignGreedy(multiParent, (item) => item.preferredX);
-    // 3) 마지막으로 남는 슬롯에 부모 없는 노드를 배치
-    assignGreedy(noParent, (item) => item.preferredX);
 
     const leftovers = withPreferred.filter((item) => !assigned.has(item.node.id));
     assignGreedy(leftovers, (item) => item.preferredX);
