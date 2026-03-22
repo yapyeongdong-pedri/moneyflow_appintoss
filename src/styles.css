@@ -45,40 +45,40 @@ body {
   display: flex;
   flex-direction: column;
   padding-bottom: calc(clamp(92px, 14dvh, 124px) + env(safe-area-inset-bottom));
-  background: radial-gradient(circle at 20% -20%, var(--bg-soft), transparent 55%), var(--bg-main);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
 .theme-calm-mint {
-  --bg-main: #ecf8f5;
-  --bg-soft: #aee4d8;
+  --bg-main: #ffffff;
+  --bg-soft: #ffffff;
   --panel: #ffffff;
-  --accent: #0f8f7f;
-  --accent-weak: #d6f2ec;
+  --accent: #1b64da;
+  --accent-weak: #e8f1ff;
   --text-primary: #13211e;
-  --text-muted: #47615b;
+  --text-muted: #5a6573;
   --danger: #d14343;
 }
 
 .theme-deep-ocean {
-  --bg-main: #edf4fc;
-  --bg-soft: #b8d5f7;
+  --bg-main: #ffffff;
+  --bg-soft: #ffffff;
   --panel: #ffffff;
-  --accent: #1f5ea9;
-  --accent-weak: #dce9fb;
+  --accent: #1b64da;
+  --accent-weak: #e8f1ff;
   --text-primary: #162740;
-  --text-muted: #5a6f86;
+  --text-muted: #5a6573;
   --danger: #c53a3a;
 }
 
 .theme-warm-sand {
-  --bg-main: #fdf5eb;
-  --bg-soft: #f6dab6;
+  --bg-main: #ffffff;
+  --bg-soft: #ffffff;
   --panel: #ffffff;
-  --accent: #b76521;
-  --accent-weak: #fbe9d4;
+  --accent: #1b64da;
+  --accent-weak: #e8f1ff;
   --text-primary: #3d2a1d;
-  --text-muted: #6d5947;
+  --text-muted: #5a6573;
   --danger: #be3535;
 }
 
@@ -226,9 +226,10 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 10px 12px;
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.74);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  backdrop-filter: none;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .brand {
@@ -269,9 +270,9 @@ body {
 .summary-card {
   margin: 6px 10px 0;
   border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff, #f6fbff);
-  border: 1px solid #dde8f2;
-  box-shadow: 0 8px 14px rgba(17, 24, 39, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
   padding: 6px 10px;
 }
 
@@ -289,8 +290,8 @@ body {
   margin: 8px 10px 0;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #d8e4f0;
-  box-shadow: 0 6px 14px rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
   padding: 8px 10px;
   display: flex;
   align-items: center;
@@ -333,8 +334,8 @@ body {
   border-radius: 14px;
   overflow: hidden;
   background: #ffffff;
-  border: 1px solid rgba(208, 220, 235, 0.6);
-  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
   min-height: 0;
 }
 
@@ -393,12 +394,14 @@ body {
 
 .btn-primary {
   color: #fff;
-  background: var(--accent);
+  background: linear-gradient(180deg, #2f80f5 0%, #1b64da 100%);
+  box-shadow: 0 6px 12px rgba(27, 100, 218, 0.24);
 }
 
 .btn-weak {
-  color: var(--accent);
-  background: var(--accent-weak);
+  color: #1b64da;
+  background: #eaf2ff;
+  box-shadow: inset 0 0 0 1px rgba(27, 100, 218, 0.12);
 }
 
 .btn-danger {
@@ -593,13 +596,13 @@ select {
 }
 
 .node-account-saving-spend {
-  border-color: #9ef3cb;
-  background: linear-gradient(135deg, #31b98a 0%, #228d6d 56%, #1a6f5d 100%);
+  border-color: #b8e9ff;
+  background: linear-gradient(135deg, #3fa8d8 0%, #2b7fb2 56%, #1d5e88 100%);
 }
 
 .node-account-saving-reserve {
-  border-color: #b7f0cf;
-  background: linear-gradient(135deg, #2ba57f 0%, #207b63 56%, #16584b 100%);
+  border-color: #a9efc6;
+  background: linear-gradient(135deg, #2fbf7b 0%, #209a61 56%, #167548 100%);
 }
 
 .node-account-invest {
@@ -655,7 +658,7 @@ select {
   line-height: 1;
   padding: 2px 4px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
 }
 
 .node-meta-inline {
