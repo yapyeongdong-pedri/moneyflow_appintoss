@@ -23,7 +23,7 @@ type ComposerKind = 'account' | 'card' | 'expense';
 type AccountSubtype = 'spending' | 'invest' | 'saving' | 'pension';
 
 const CANVAS_WIDTH = 356;
-const CANVAS_HEIGHT = 960;
+const CANVAS_HEIGHT = 920;
 const NODE_BOX_WIDTH = 128;
 const NODE_SIDE_GUTTER = 12;
 const MAX_ROW_NODES = 5;
@@ -90,12 +90,15 @@ function starterGraph(): FlowGraph {
 }
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
+  const rowBand = CANVAS_HEIGHT / 4;
+  const bandInsetTop = 16;
+  const rowLineGap = 66;
   const rowY: Record<string, number[]> = {
-    salary_account: [Math.round((CANVAS_HEIGHT / 4) * 0.35)],
-    asset_account: [Math.round((CANVAS_HEIGHT / 4) * 1.2), Math.round((CANVAS_HEIGHT / 4) * 1.62)],
-    payment_instrument: [Math.round((CANVAS_HEIGHT / 4) * 2.2), Math.round((CANVAS_HEIGHT / 4) * 2.62)],
-    expense_category: [Math.round((CANVAS_HEIGHT / 4) * 3.2), Math.round((CANVAS_HEIGHT / 4) * 3.62)],
-    other: [Math.round((CANVAS_HEIGHT / 4) * 3.2), Math.round((CANVAS_HEIGHT / 4) * 3.62)]
+    salary_account: [Math.round(rowBand * 0 + bandInsetTop)],
+    asset_account: [Math.round(rowBand * 1 + bandInsetTop), Math.round(rowBand * 1 + bandInsetTop + rowLineGap), Math.round(rowBand * 1 + bandInsetTop + rowLineGap * 2)],
+    payment_instrument: [Math.round(rowBand * 2 + bandInsetTop), Math.round(rowBand * 2 + bandInsetTop + rowLineGap), Math.round(rowBand * 2 + bandInsetTop + rowLineGap * 2)],
+    expense_category: [Math.round(rowBand * 3 + bandInsetTop), Math.round(rowBand * 3 + bandInsetTop + rowLineGap), Math.round(rowBand * 3 + bandInsetTop + rowLineGap * 2)],
+    other: [Math.round(rowBand * 3 + bandInsetTop), Math.round(rowBand * 3 + bandInsetTop + rowLineGap), Math.round(rowBand * 3 + bandInsetTop + rowLineGap * 2)]
   };
 
   const incoming = new Map<string, string[]>();
@@ -129,7 +132,7 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
 
   const positionRow = (rowKey: string, nodes: FlowNode[], yList: number[]) => {
     if (!nodes.length) return;
-    const maxPerLine = rowKey === 'salary_account' ? 1 : 3;
+    const maxPerLine = rowKey === 'salary_account' ? 1 : 2;
     const rowNodes = nodes.slice(0, MAX_ROW_NODES);
     const lines = Math.ceil(rowNodes.length / maxPerLine);
 
