@@ -656,6 +656,7 @@ select {
   margin-top: 0;
   font-size: 11px;
   line-height: 1;
+  text-align: left;
   padding: 2px 4px;
   border-radius: 4px;
   background: transparent;

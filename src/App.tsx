@@ -28,7 +28,7 @@ const SALARY_NODE_WIDTH = 58;
 const NODE_SIDE_GUTTER = 2;
 const ACCOUNT_ROW_LIMIT = 7;
 const CARD_ROW_LIMIT = 5;
-const EXPENSE_ROW_LIMIT = 5;
+const EXPENSE_ROW_LIMIT = 7;
 const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
@@ -419,6 +419,19 @@ function AppBody() {
 
   const accountLinks = useMemo(() => graph?.nodes.filter((n) => n.type === 'salary_account' || n.type === 'asset_account') ?? [], [graph]);
   const expenseLinks = useMemo(() => graph?.nodes.filter((n) => n.type === 'salary_account' || n.type === 'asset_account' || n.type === 'payment_instrument') ?? [], [graph]);
+  const accountSubtypeCounts = useMemo(() => {
+    const counters = { spending: 0, savingSpend: 0, savingReserve: 0, invest: 0, pension: 0 };
+    const accounts = graph?.nodes.filter((n) => n.type === 'asset_account') ?? [];
+    accounts.forEach((node) => {
+      const subtype = normalizeAccountSubtype(node.meta?.subtype as string | undefined);
+      if (subtype === 'spending') counters.spending += 1;
+      else if (subtype === 'saving_spend') counters.savingSpend += 1;
+      else if (subtype === 'saving_reserve') counters.savingReserve += 1;
+      else if (subtype === 'invest') counters.invest += 1;
+      else if (subtype === 'pension') counters.pension += 1;
+    });
+    return counters;
+  }, [graph]);
   const highlighted = useMemo(() => {
     if (!graph || selection.kind !== 'node') return null;
     const activeEdges = graph.edges.filter((e) => e.active);
@@ -736,7 +749,9 @@ function AppBody() {
           ) : (
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
-              <section className="summary-card"><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
+              <section className="summary-card">
+                <p>입출금 {accountSubtypeCounts.spending} · 적금(지출용) {accountSubtypeCounts.savingSpend} · 적금(저축용) {accountSubtypeCounts.savingReserve} · 투자 {accountSubtypeCounts.invest} · 연금 {accountSubtypeCounts.pension}</p>
+              </section>
               <section className="canvas-wrap" id="flow-canvas" ref={(el) => { canvasWrapRef.current = el; }}>
                 <div className="canvas-bands" aria-hidden>
                   <div className="canvas-band canvas-band-1"><span className="canvas-band-label">저축 / 투자</span></div>
