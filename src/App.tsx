@@ -94,6 +94,15 @@ function normalizeAccountSubtype(value?: string): AccountSubtype {
   return 'spending';
 }
 
+function accountSubtypeRank(value?: string): number {
+  const subtype = normalizeAccountSubtype(value);
+  if (subtype === 'spending') return 0;
+  if (subtype === 'saving_spend') return 1;
+  if (subtype === 'invest') return 2;
+  if (subtype === 'pension') return 3;
+  return 4; // saving_reserve
+}
+
 function isUpperAsset(node: FlowNode): boolean {
   if (node.type !== 'asset_account') return false;
   const subtype = normalizeAccountSubtype(node.meta?.subtype as string | undefined);
@@ -197,6 +206,23 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       const salary = rowNodes[0];
       xById.set(salary.id, SALARY_X);
       salary.ui = { ...salary.ui, x: SALARY_X, y: yPos };
+      return;
+    }
+
+    if (rowKey === 'asset_upper' || rowKey === 'asset_account') {
+      const minX = NODE_SIDE_GUTTER;
+      const gap = 4;
+      const sortedBySubtype = [...rowNodes].sort((a, b) => {
+        const rankA = accountSubtypeRank(a.meta?.subtype as string | undefined);
+        const rankB = accountSubtypeRank(b.meta?.subtype as string | undefined);
+        if (rankA !== rankB) return rankA - rankB;
+        return a.name.localeCompare(b.name);
+      });
+      sortedBySubtype.forEach((node, idx) => {
+        const x = Math.min(CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER, minX + idx * (NODE_BOX_WIDTH + gap));
+        xById.set(node.id, x);
+        node.ui = { ...node.ui, x, y: yPos };
+      });
       return;
     }
 
@@ -760,7 +786,7 @@ function AppBody() {
         <div className={`app-shell ${themeClass} ${showIntro ? 'app-shell-intro' : ''}`}>
           {showIntro ? (
             <section className="intro-screen">
-              <h1 className="intro-title">관리비, 통신비, 구독료<br />어느 통장/카드에서 나가더라?</h1>
+              <h1 className="intro-title">관리비, 통신비, 구독료 어느 통장/카드에서 나가더라?</h1>
               <p className="intro-body">
                 <span className="intro-body-line1">소중한 내 월급</span>
                 <span className="intro-body-line2"><strong className="intro-body-strong">Money Flow</strong>로 관리하세요</span>
@@ -780,7 +806,7 @@ function AppBody() {
                 </div>
               </div>
               <button type="button" className="btn btn-primary intro-cta" onClick={() => setShowIntro(false)}>
-                내 Money Flow 만들기
+                <span className="intro-cta-text">내 Money Flow 만들기</span>
               </button>
             </section>
           ) : (

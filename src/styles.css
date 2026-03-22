@@ -104,7 +104,7 @@ body {
 .intro-screen h1,
 .intro-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.2;
   letter-spacing: -0.01em;
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
@@ -125,12 +125,12 @@ body {
 .intro-body-line1,
 .intro-body-line2 {
   display: block;
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.2;
 }
 
 .intro-body-strong {
-  font-size: 24px;
+  font-size: 30px;
   line-height: 1;
   font-weight: 800;
 }
@@ -179,10 +179,18 @@ body {
   line-height: 1;
   white-space: nowrap;
   border-radius: 18px;
-  font-size: 175px;
+  font-size: 16px;
   font-weight: 800;
   margin-bottom: calc(4px + env(safe-area-inset-bottom));
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
+  overflow: visible;
+}
+
+.intro-cta-text {
+  display: inline-block;
+  line-height: 1;
+  transform: scale(2.5);
+  transform-origin: center center;
 }
 
 @media (max-height: 760px) {
@@ -193,17 +201,17 @@ body {
   }
 
   .intro-title {
-    font-size: 12px;
+    font-size: 15px;
     line-height: 1.15;
   }
 
   .intro-body-line1,
   .intro-body-line2 {
-    font-size: 15px;
+    font-size: 18px;
   }
 
   .intro-body-strong {
-    font-size: 22px;
+    font-size: 28px;
   }
 
   .intro-cards {
@@ -229,8 +237,12 @@ body {
 
   .intro-cta {
     height: 56px;
-    font-size: 135px;
+    font-size: 15px;
     border-radius: 14px;
+  }
+
+  .intro-cta-text {
+    transform: scale(2.3);
   }
 }
 
@@ -257,11 +269,12 @@ body {
 
 .topbar h1 {
   margin: 0;
-  font-size: 36px;
+  font-size: 32.4px;
   line-height: 1;
   font-weight: 900;
   letter-spacing: -0.02em;
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  color: #3f6175;
 }
 
 .env-badge {
@@ -281,7 +294,7 @@ body {
 
 .top-actions .btn {
   font-size: 12px;
-  padding: 8px 10px;
+  padding: 0;
 }
 
 .summary-card {
@@ -300,7 +313,7 @@ body {
 .summary-card p {
   margin: 0;
   font-size: 11px;
-  color: var(--text-muted);
+  color: #3f6175;
 }
 
 .node-quickbar {
@@ -583,7 +596,9 @@ select {
   width: var(--node-width);
   min-height: var(--node-min-height);
   border-radius: 10px;
-  background: linear-gradient(135deg, #3f7fe4, #2758bc);
+  background: #ffffff;
+  border: 1px solid rgba(63, 97, 117, 0.24);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
   align-items: center;
   justify-content: center;
 }
@@ -733,6 +748,7 @@ select {
   font-size: 11px;
   line-height: 1;
   margin-top: 9px;
+  color: #3f6175;
 }
 
 .node-expense .node-main-label {
