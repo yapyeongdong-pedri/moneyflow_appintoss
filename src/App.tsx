@@ -6,7 +6,6 @@ import { shareGraph } from './app/share/share';
 import { addEdge, addNode, createHistory, GraphHistoryState, removeNode, replaceGraph } from './domain/graph-ops';
 import { FlowGraph, FlowNode, NodeType, ThemeName } from './domain/graph-model';
 import { resolveEdgeType } from './domain/graph-validator';
-import { detectEnvironment } from './infra/environment';
 import { loadGraph, saveGraph } from './infra/storage';
 
 interface FlowNodeData {
@@ -347,7 +346,6 @@ function AppBody() {
   }, []);
 
   const graph = history?.present;
-  const env = detectEnvironment();
   const themeClass = graph ? THEMES[graph.settings.theme].className : THEMES['calm-mint'].className;
 
   const accountLinks = useMemo(() => graph?.nodes.filter((n) => n.type === 'salary_account' || n.type === 'asset_account') ?? [], [graph]);
@@ -662,8 +660,8 @@ function AppBody() {
             </section>
           ) : (
             <>
-              <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
-              <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
+              <header className="topbar"><div className="brand"><h1>Money Flow</h1></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
+              <section className="summary-card"><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
               <section className="canvas-wrap" id="flow-canvas" ref={(el) => { canvasWrapRef.current = el; }}>
                 <div className="canvas-bands" aria-hidden>
                   <div className="canvas-band canvas-band-1"><span className="canvas-band-label">저축 / 투자</span></div>

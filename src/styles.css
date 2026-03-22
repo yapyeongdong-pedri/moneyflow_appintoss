@@ -241,8 +241,10 @@ body {
 
 .topbar h1 {
   margin: 0;
-  font-size: 18px;
-  line-height: 1.2;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
 
 .env-badge {
@@ -266,12 +268,12 @@ body {
 }
 
 .summary-card {
-  margin: 10px 10px 0;
-  border-radius: 14px;
+  margin: 6px 10px 0;
+  border-radius: 12px;
   background: linear-gradient(135deg, #ffffff, #f6fbff);
   border: 1px solid #dde8f2;
-  box-shadow: 0 12px 26px rgba(17, 24, 39, 0.1);
-  padding: 10px 12px;
+  box-shadow: 0 8px 14px rgba(17, 24, 39, 0.08);
+  padding: 6px 10px;
 }
 
 .summary-card strong {
@@ -279,8 +281,8 @@ body {
 }
 
 .summary-card p {
-  margin: 4px 0 0;
-  font-size: 12px;
+  margin: 0;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -328,7 +330,7 @@ body {
 .canvas-wrap {
   position: relative;
   flex: 1;
-  margin: 10px 10px 0;
+  margin: 6px 10px 0;
   border-radius: 18px;
   overflow: hidden;
   background:
