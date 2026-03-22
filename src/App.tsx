@@ -3,8 +3,9 @@ import ReactFlow, { Background, Edge, Handle, MarkerType, Node, NodeProps, Posit
 import { BannerAdWrapper } from './ads/BannerAdWrapper';
 import { getBannerAdGroupId } from './ads/adConstants';
 import { exportGraphPng, shareGraph } from './app/share/share';
-import { addEdge, addNode, createHistory, GraphHistoryState, removeNode, replaceGraph, updateNode } from './domain/graph-ops';
+import { addEdge, addNode, createHistory, GraphHistoryState, removeNode, replaceGraph } from './domain/graph-ops';
 import { FlowGraph, FlowNode, NodeType, ThemeName } from './domain/graph-model';
+import { resolveEdgeType } from './domain/graph-validator';
 import { detectEnvironment } from './infra/environment';
 import { loadGraph, saveGraph } from './infra/storage';
 
@@ -21,8 +22,9 @@ type Selection = { kind: 'node'; value: FlowNode } | { kind: 'none' };
 type ComposerKind = 'account' | 'card' | 'expense';
 type AccountSubtype = 'spending' | 'saving' | 'invest';
 
-const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [356, 5200]];
-const PAN_BOUNDS: [[number, number], [number, number]] = [[-240, 0], [760, 5200]];
+const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [1000, 5200]];
+const PAN_BOUNDS: [[number, number], [number, number]] = [[-120, 0], [1120, 5200]];
+const CANVAS_CENTER_X = 500;
 
 const THEMES: Record<ThemeName, { className: string }> = {
   'calm-mint': { className: 'theme-calm-mint' },
@@ -76,7 +78,7 @@ function salaryNode(): FlowNode {
     type: 'salary_account',
     name: '월급통장',
     meta: { purpose: '메인 통장', institution: '주거래 은행' },
-    ui: { x: 138, y: 60 }
+    ui: { x: CANVAS_CENTER_X, y: 60 }
   };
 }
 
@@ -121,14 +123,15 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
   for (const node of graph.nodes) byRow.get(toRowKey(node))?.push(node);
 
   const slotX = (count: number): number[] => {
-    if (count <= 1) return [148];
-    if (count === 2) return [86, 210];
-    return [24, 148, 272];
+    if (count <= 1) return [CANVAS_CENTER_X];
+    const minX = 80;
+    const maxX = 920;
+    return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
   };
 
-  const positionRow = (nodes: FlowNode[], y: number) => {
+  const positionRow = (rowKey: string, nodes: FlowNode[], y: number) => {
     if (!nodes.length) return;
-    const maxPerLine = 3;
+    const maxPerLine = 5;
     const lineGap = 116;
     const lines = Math.ceil(nodes.length / maxPerLine);
 
@@ -137,7 +140,7 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       const xs = slotX(lineNodes.length);
       const yPos = y + line * lineGap;
       lineNodes.forEach((node, index) => {
-        const x = xs[index];
+        const x = rowKey === 'salary_account' ? CANVAS_CENTER_X : xs[index];
         xById.set(node.id, x);
         node.ui = { ...node.ui, x, y: yPos };
       });
@@ -155,7 +158,7 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       if (Math.abs(avgXA - avgXB) > 8) return avgXA - avgXB;
       return a.name.localeCompare(b.name);
     });
-    positionRow(sorted, rowY[row]);
+    positionRow(row, sorted, rowY[row]);
   }
 
   return { ...graph, nodes: [...graph.nodes] };
@@ -212,6 +215,21 @@ function AppBody() {
   const [expenseLinkSourceId, setExpenseLinkSourceId] = useState('');
   const [expenseMemo, setExpenseMemo] = useState('');
 
+  const [detailKind, setDetailKind] = useState<ComposerKind>('account');
+  const [detailNodeId, setDetailNodeId] = useState('');
+  const [detailAccountSubtype, setDetailAccountSubtype] = useState<AccountSubtype>('spending');
+  const [detailAccountBank, setDetailAccountBank] = useState('');
+  const [detailAccountPurpose, setDetailAccountPurpose] = useState('');
+  const [detailAccountLinkSourceId, setDetailAccountLinkSourceId] = useState('');
+  const [detailAccountMemo, setDetailAccountMemo] = useState('');
+  const [detailCardIssuer, setDetailCardIssuer] = useState('');
+  const [detailCardPurpose, setDetailCardPurpose] = useState('');
+  const [detailCardLinkAccountId, setDetailCardLinkAccountId] = useState('');
+  const [detailCardMemo, setDetailCardMemo] = useState('');
+  const [detailExpenseType, setDetailExpenseType] = useState('');
+  const [detailExpenseLinkSourceId, setDetailExpenseLinkSourceId] = useState('');
+  const [detailExpenseMemo, setDetailExpenseMemo] = useState('');
+
   useEffect(() => {
     const loaded = loadGraph();
     const base = loaded && loaded.nodes.length ? loaded : starterGraph();
@@ -256,17 +274,34 @@ function AppBody() {
     }
   })), [graph]);
 
-  const rfEdges = useMemo<Edge[]>(() => (graph?.edges ?? []).map((e) => ({
+  const rfEdges = useMemo<Edge[]>(() => (graph?.edges ?? []).map((e) => {
+    const targetType = (graph?.nodes ?? []).find((node) => node.id === e.targetId)?.type;
+    const toExpense = targetType === 'expense_category';
+    return ({
     id: e.id,
     source: e.sourceId,
     target: e.targetId,
     type: 'default',
     markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: e.active ? '#2f6f9f' : '#8fa9be' },
     style: e.active
-      ? { strokeWidth: 2.4, stroke: '#2f6f9f', strokeLinecap: 'round', strokeLinejoin: 'round' }
-      : { opacity: 0.35, strokeWidth: 1.8, stroke: '#8fa9be', strokeLinecap: 'round', strokeLinejoin: 'round' },
+      ? {
+          strokeWidth: 2.4,
+          stroke: '#2f6f9f',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          strokeDasharray: toExpense ? '6 5' : undefined
+        }
+      : {
+          opacity: 0.35,
+          strokeWidth: 1.8,
+          stroke: '#8fa9be',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          strokeDasharray: toExpense ? '6 5' : undefined
+        },
     animated: false
-  })), [graph]);
+  });
+  }), [graph]);
 
   if (!history) return <main className="app-stage"><section className="mobile-frame"><section className="app-shell theme-calm-mint" /></section></main>;
 
@@ -294,6 +329,110 @@ function AppBody() {
     setShowTopHint(true);
     if (topHintTimerRef.current) window.clearTimeout(topHintTimerRef.current);
     topHintTimerRef.current = window.setTimeout(() => setShowTopHint(false), 1300);
+  };
+
+  const openDetailForNode = (node: FlowNode) => {
+    if (node.type === 'salary_account') {
+      setMessage('월급통장은 고정 노드로 편집 대상에서 제외했어요.');
+      return;
+    }
+    const incomingEdge = history.present.edges.find((edge) => edge.active && edge.targetId === node.id);
+    if (node.type === 'asset_account') {
+      setDetailKind('account');
+      setDetailNodeId(node.id);
+      setDetailAccountSubtype((node.meta?.subtype as AccountSubtype) ?? 'spending');
+      setDetailAccountBank(node.meta?.institution ?? '');
+      setDetailAccountPurpose(node.meta?.purpose ?? node.name);
+      setDetailAccountLinkSourceId(incomingEdge?.sourceId ?? '');
+      setDetailAccountMemo(node.meta?.note ?? '');
+    }
+    if (node.type === 'payment_instrument') {
+      setDetailKind('card');
+      setDetailNodeId(node.id);
+      setDetailCardIssuer(node.meta?.institution ?? '');
+      setDetailCardPurpose(node.meta?.purpose ?? node.name);
+      setDetailCardLinkAccountId(incomingEdge?.sourceId ?? '');
+      setDetailCardMemo(node.meta?.note ?? '');
+    }
+    if (node.type === 'expense_category') {
+      setDetailKind('expense');
+      setDetailNodeId(node.id);
+      setDetailExpenseType(node.meta?.expenseType ?? node.name);
+      setDetailExpenseLinkSourceId(incomingEdge?.sourceId ?? '');
+      setDetailExpenseMemo(node.meta?.note ?? '');
+    }
+    setSelection({ kind: 'node', value: node });
+    setDetailOpen(true);
+  };
+
+  const saveDetailNode = () => {
+    if (!history || !detailNodeId) return;
+    const nextGraph: FlowGraph = JSON.parse(JSON.stringify(history.present)) as FlowGraph;
+    const node = nextGraph.nodes.find((item) => item.id === detailNodeId);
+    if (!node) return;
+    const incomingEdge = nextGraph.edges.find((edge) => edge.active && edge.targetId === detailNodeId);
+
+    if (detailKind === 'account') {
+      node.name = detailAccountPurpose.trim() || node.name;
+      node.meta = {
+        ...node.meta,
+        subtype: detailAccountSubtype,
+        institution: detailAccountBank.trim(),
+        purpose: detailAccountPurpose.trim() || node.name,
+        note: detailAccountMemo.trim() || undefined
+      };
+      if (incomingEdge && detailAccountLinkSourceId) {
+        incomingEdge.sourceId = detailAccountLinkSourceId;
+        const sourceNode = nextGraph.nodes.find((item) => item.id === detailAccountLinkSourceId);
+        if (sourceNode) {
+          const resolved = resolveEdgeType(sourceNode.type, node.type);
+          if (resolved) incomingEdge.type = resolved;
+        }
+      }
+    }
+
+    if (detailKind === 'card') {
+      node.name = detailCardPurpose.trim() || node.name;
+      node.meta = {
+        ...node.meta,
+        institution: detailCardIssuer.trim(),
+        purpose: detailCardPurpose.trim() || node.name,
+        note: detailCardMemo.trim() || undefined
+      };
+      if (incomingEdge && detailCardLinkAccountId) {
+        incomingEdge.sourceId = detailCardLinkAccountId;
+        const sourceNode = nextGraph.nodes.find((item) => item.id === detailCardLinkAccountId);
+        if (sourceNode) {
+          const resolved = resolveEdgeType(sourceNode.type, node.type);
+          if (resolved) incomingEdge.type = resolved;
+        }
+      }
+    }
+
+    if (detailKind === 'expense') {
+      node.name = detailExpenseType.trim() || node.name;
+      node.meta = {
+        ...node.meta,
+        expenseType: detailExpenseType.trim() || node.name,
+        note: detailExpenseMemo.trim() || undefined
+      };
+      if (incomingEdge && detailExpenseLinkSourceId) {
+        incomingEdge.sourceId = detailExpenseLinkSourceId;
+        const sourceNode = nextGraph.nodes.find((item) => item.id === detailExpenseLinkSourceId);
+        if (sourceNode) {
+          const resolved = resolveEdgeType(sourceNode.type, node.type);
+          if (resolved) incomingEdge.type = resolved;
+        }
+      }
+    }
+
+    try {
+      setHistory(replaceGraph(history, prettyLayout(nextGraph)));
+      setDetailOpen(false);
+      setMessage('노드 정보를 저장했어요.');
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
   };
 
   const addByComposer = () => {
@@ -343,7 +482,7 @@ function AppBody() {
                 </div>
                 <div className="intro-card">
                   <span className="intro-emoji">💳</span>
-                  <span className="intro-copy">갖고 있는 통장, 주식, 신용/체크카드 모두 관리해요</span>
+                  <span className="intro-copy">통장, 주식, 신용/체크카드 모두 관리해요</span>
                 </div>
                 <div className="intro-card">
                   <span className="intro-emoji">🔎</span>
@@ -358,7 +497,7 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(true); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} panOnScroll={true} panOnDrag={true} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: 0.22 }} fitView><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} panOnScroll={true} panOnDrag={true} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: 0.22 }} fitView><Background /></ReactFlow></section>
 
               {canTopMove && showTopHint && (
                 <button
@@ -381,8 +520,11 @@ function AppBody() {
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={addByComposer}>추가하기</button><button type="button" className="btn btn-weak" onClick={() => { const next = replaceGraph(history, prettyLayout(history.present)); setHistory(next); setMessage('노드를 다시 정렬했어요.'); }}>다시 정렬</button></div>
               </BottomSheet>
 
-              <BottomSheet open={detailOpen && selection.kind !== 'none'} title="상세 정보" onClose={() => setDetailOpen(false)}>
-                {selection.kind === 'node' && <div className="sheet-form"><p>노드 타입: {NODE_LABEL[selection.value.type]}</p><label>이름<input value={selection.value.name} onChange={(e) => setSelection((prev) => prev.kind === 'node' ? { ...prev, value: { ...prev.value, name: e.target.value } } : prev)} /></label><label>메모<input value={selection.value.meta?.note ?? ''} onChange={(e) => setSelection((prev) => prev.kind === 'node' ? { ...prev, value: { ...prev.value, meta: { ...prev.value.meta, note: e.target.value } } } : prev)} /></label><div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={() => { if (selection.kind !== 'node') return; try { const next = updateNode(history, selection.value.id, { name: selection.value.name, meta: selection.value.meta }); setHistory(replaceGraph(next, prettyLayout(next.present))); setMessage('노드 정보를 저장했어요.'); setDetailOpen(false); } catch (e) { setMessage((e as Error).message); } }}>저장</button><button type="button" className="btn btn-danger" onClick={() => { if (selection.kind !== 'node') return; if (selection.value.type === 'salary_account') return setMessage('월급통장은 삭제할 수 없어요.'); const next = removeNode(history, selection.value.id); setHistory(replaceGraph(next, prettyLayout(next.present))); setSelection({ kind: 'none' }); setDetailOpen(false); }}>삭제</button></div></div>}
+              <BottomSheet open={detailOpen && selection.kind !== 'none'} title="노드 상세 수정" onClose={() => setDetailOpen(false)} align="center">
+                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="saving">적금</option><option value="invest">투자</option></select></label><label>은행명<input value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {detailKind === 'card' && <div className="sheet-form"><label>카드명<input value={detailCardIssuer} onChange={(e) => setDetailCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도<input value={detailCardPurpose} onChange={(e) => setDetailCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌<select value={detailCardLinkAccountId} onChange={(e) => setDetailCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailCardMemo} onChange={(e) => setDetailCardMemo(e.target.value)} maxLength={40} /></label></div>}
+                {detailKind === 'expense' && <div className="sheet-form"><label>지출항목 종류<input value={detailExpenseType} onChange={(e) => setDetailExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드<select value={detailExpenseLinkSourceId} onChange={(e) => setDetailExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{`${n.meta?.purpose ?? n.name} (${n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : '월급통장'})`}</option>)}</select></label><label>기타 메모<input value={detailExpenseMemo} onChange={(e) => setDetailExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
+                <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={saveDetailNode}>저장</button><button type="button" className="btn btn-danger" onClick={() => { if (!detailNodeId) return; const target = history.present.nodes.find((n) => n.id === detailNodeId); if (!target) return; if (target.type === 'salary_account') return setMessage('월급통장은 삭제할 수 없어요.'); const next = removeNode(history, detailNodeId); setHistory(replaceGraph(next, prettyLayout(next.present))); setSelection({ kind: 'none' }); setDetailOpen(false); }}>삭제</button></div>
                 <button type="button" className="btn btn-weak" onClick={async () => { const canvas = document.getElementById('flow-canvas'); if (!canvas) return; try { await exportGraphPng(canvas); setMessage('PNG 저장을 완료했어요.'); } catch { setMessage('PNG 저장에 실패했어요.'); } }}>PNG 저장</button>
               </BottomSheet>
 
