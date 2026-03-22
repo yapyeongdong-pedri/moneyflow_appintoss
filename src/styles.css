@@ -416,7 +416,7 @@ select {
 }
 
 .node-main-label {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.2;
   font-weight: 700;
 }
@@ -426,25 +426,19 @@ select {
   left: 10px;
   top: 8px;
   display: flex;
-  align-items: baseline;
-  gap: 4px;
+  align-items: center;
+  gap: 0;
   max-width: calc(100% - 20px);
   text-align: left;
 }
 
-.node-meta-inline strong {
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.1;
+.node-meta-inline small {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.96;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.node-meta-inline small {
-  font-size: 10px;
-  opacity: 0.92;
-  white-space: nowrap;
 }
 
 .node-type-tag {

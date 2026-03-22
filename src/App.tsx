@@ -48,18 +48,19 @@ function nodeClass(type: NodeType, subtype?: string): string {
 
 function FlowShapeNode(props: NodeProps<FlowNodeData>) {
   const { type, label, subtype, purpose, institution, typeTag } = props.data;
+  const isAccountOrCard = type === 'asset_account' || type === 'payment_instrument';
+  const mainText = isAccountOrCard ? purpose ?? label : label;
   return (
     <div className="node-wrap">
       <div className={nodeClass(type, subtype)}>
         {typeTag && <span className="node-type-tag">{typeTag}</span>}
-        {(purpose || institution) && (
+        {isAccountOrCard && institution && (
           <div className="node-meta-inline">
-            <strong>{purpose ?? label}</strong>
-            {institution && <small>({institution})</small>}
+            <small>{institution}</small>
           </div>
         )}
         {type !== 'salary_account' && <Handle type="target" position={Position.Top} />}
-        <span className="node-main-label">{label}</span>
+        <span className="node-main-label">{mainText}</span>
         {type !== 'expense_category' && <Handle type="source" position={Position.Bottom} />}
       </div>
     </div>
