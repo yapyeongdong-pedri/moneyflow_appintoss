@@ -104,7 +104,7 @@ body {
 .intro-screen h1,
 .intro-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.2;
   letter-spacing: -0.01em;
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
@@ -113,6 +113,7 @@ body {
 
 .intro-body {
   margin: 0;
+  margin-top: 30px;
   color: #3f6175;
   font-weight: 500;
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
@@ -138,7 +139,7 @@ body {
 .intro-cards {
   min-height: 0;
   display: grid;
-  gap: 24px;
+  gap: 36px;
   margin-top: 88px;
   width: min(100%, 360px);
   align-content: start;
@@ -189,7 +190,7 @@ body {
 .intro-cta-text {
   display: inline-block;
   line-height: 1;
-  transform: scale(2.5);
+  transform: scale(2);
   transform-origin: center center;
 }
 
@@ -201,7 +202,7 @@ body {
   }
 
   .intro-title {
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.15;
   }
 
@@ -215,7 +216,7 @@ body {
   }
 
   .intro-cards {
-    gap: 20px;
+    gap: 30px;
     margin-top: 88px;
     padding-top: 0;
   }
@@ -242,7 +243,7 @@ body {
   }
 
   .intro-cta-text {
-    transform: scale(2.3);
+    transform: scale(1.84);
   }
 }
 
@@ -294,7 +295,7 @@ body {
 
 .top-actions .btn {
   font-size: 12px;
-  padding: 0;
+  padding: 12px 15px;
 }
 
 .summary-card {
@@ -748,6 +749,10 @@ select {
   font-size: 11px;
   line-height: 1;
   margin-top: 9px;
+  color: #3f6175;
+}
+
+.node-salary .node-meta-inline small {
   color: #3f6175;
 }
 

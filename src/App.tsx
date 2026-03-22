@@ -210,7 +210,6 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
     }
 
     if (rowKey === 'asset_upper' || rowKey === 'asset_account') {
-      const minX = NODE_SIDE_GUTTER;
       const gap = 4;
       const sortedBySubtype = [...rowNodes].sort((a, b) => {
         const rankA = accountSubtypeRank(a.meta?.subtype as string | undefined);
@@ -218,8 +217,13 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
         if (rankA !== rankB) return rankA - rankB;
         return a.name.localeCompare(b.name);
       });
+      const count = sortedBySubtype.length;
+      const rowWidth = count * NODE_BOX_WIDTH + Math.max(0, count - 1) * gap;
+      const minX = NODE_SIDE_GUTTER;
+      const maxX = CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER;
+      const startX = Math.max(minX, Math.min(maxX, Math.round((CANVAS_WIDTH - rowWidth) / 2)));
       sortedBySubtype.forEach((node, idx) => {
-        const x = Math.min(CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER, minX + idx * (NODE_BOX_WIDTH + gap));
+        const x = Math.min(maxX, startX + idx * (NODE_BOX_WIDTH + gap));
         xById.set(node.id, x);
         node.ui = { ...node.ui, x, y: yPos };
       });
