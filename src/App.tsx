@@ -252,6 +252,8 @@ function AppBody() {
   const [canTopMove, setCanTopMove] = useState(false);
   const topHintTimerRef = useRef<number | null>(null);
   const lockedViewportXRef = useRef(0);
+  const canvasWrapRef = useRef<HTMLElement | null>(null);
+  const [lockedZoom, setLockedZoom] = useState(DEFAULT_VIEW_MAX_ZOOM);
 
   const [kind, setKind] = useState<ComposerKind>('account');
   const [accountSubtype, setAccountSubtype] = useState<AccountSubtype>('spending');
@@ -293,14 +295,36 @@ function AppBody() {
   useEffect(() => { if (history) saveGraph(history.present); }, [history]);
   useEffect(() => { if (!message) return; const t = window.setTimeout(() => setMessage(''), 2200); return () => window.clearTimeout(t); }, [message]);
   const focusMiniView = () => {
-    lockedViewportXRef.current = 0;
-    void setViewport({ x: 0, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 180 });
+    const canvasEl = canvasWrapRef.current;
+    if (!canvasEl) {
+      lockedViewportXRef.current = 0;
+      setLockedZoom(DEFAULT_VIEW_MAX_ZOOM);
+      void setViewport({ x: 0, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 180 });
+      return;
+    }
+    const rect = canvasEl.getBoundingClientRect();
+    const zoomByWidth = rect.width / CANVAS_WIDTH;
+    const zoomByHeight = rect.height / CANVAS_HEIGHT;
+    const nextZoom = Math.max(0.5, Math.min(1, zoomByWidth, zoomByHeight));
+    const nextX = Math.max(0, Math.round((rect.width - CANVAS_WIDTH * nextZoom) / 2));
+    lockedViewportXRef.current = nextX;
+    setLockedZoom(nextZoom);
+    void setViewport({ x: nextX, y: 0, zoom: nextZoom }, { duration: 180 });
   };
 
   useEffect(() => {
     if (!history || showIntro) return;
     const t = window.setTimeout(() => { focusMiniView(); }, 30);
-    return () => window.clearTimeout(t);
+    const canvasEl = canvasWrapRef.current;
+    if (!canvasEl || typeof ResizeObserver === 'undefined') {
+      return () => window.clearTimeout(t);
+    }
+    const observer = new ResizeObserver(() => { focusMiniView(); });
+    observer.observe(canvasEl);
+    return () => {
+      window.clearTimeout(t);
+      observer.disconnect();
+    };
   }, [history?.present.nodes.length, history?.present.edges.length, setViewport, showIntro]);
 
   useEffect(() => {
@@ -421,7 +445,7 @@ function AppBody() {
 
   const handleFlowMove = (event: unknown, viewport: { x: number; y: number; zoom: number }) => {
     if (Math.abs(viewport.x - lockedViewportXRef.current) > 0.5) {
-      void setViewport({ x: lockedViewportXRef.current, y: viewport.y, zoom: viewport.zoom }, { duration: 0 });
+      void setViewport({ x: lockedViewportXRef.current, y: viewport.y, zoom: lockedZoom }, { duration: 0 });
     }
     const movedDown = viewport.y > 8;
     setCanTopMove(movedDown);
@@ -434,7 +458,7 @@ function AppBody() {
 
   const handleFlowMoveEnd = (_event: unknown, viewport: { x: number; y: number; zoom: number }) => {
     if (Math.abs(viewport.x - lockedViewportXRef.current) > 0.5) {
-      void setViewport({ x: lockedViewportXRef.current, y: viewport.y, zoom: viewport.zoom }, { duration: 80 });
+      void setViewport({ x: lockedViewportXRef.current, y: viewport.y, zoom: lockedZoom }, { duration: 80 });
     }
   };
 
@@ -624,7 +648,7 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas" ref={(el) => { canvasWrapRef.current = el; }}><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={lockedZoom} maxZoom={lockedZoom} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow></section>
 
               {selection.kind === 'node' && !detailOpen && (
                 <section className="node-quickbar">
@@ -641,7 +665,7 @@ function AppBody() {
                   type="button"
                   className="scroll-top-chip"
                   onClick={() => {
-                    void setViewport({ x: lockedViewportXRef.current, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 260 });
+                    void setViewport({ x: lockedViewportXRef.current, y: 0, zoom: lockedZoom }, { duration: 260 });
                     setShowTopHint(false);
                   }}
                 >
