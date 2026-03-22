@@ -86,7 +86,7 @@ function starterGraph(): FlowGraph {
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
   const rowY: Record<string, number> = {
-    salary_account: 38,
+    salary_account: 94,
     asset_account: 150,
     payment_instrument: 310,
     expense_category: 470,
