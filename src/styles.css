@@ -166,11 +166,58 @@ body {
   width: 100%;
   margin-top: 6px;
   height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  white-space: nowrap;
   border-radius: 18px;
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 800;
   z-index: 2;
   margin-bottom: calc(6px + env(safe-area-inset-bottom));
+}
+
+@media (max-height: 760px) {
+  .intro-screen {
+    padding: 16px 14px 12px;
+    gap: 10px;
+  }
+
+  .intro-title {
+    font-size: 20px;
+    line-height: 1.15;
+  }
+
+  .intro-body {
+    font-size: 13px;
+  }
+
+  .intro-cards {
+    gap: 10px;
+    padding-top: 10px;
+  }
+
+  .intro-card {
+    min-height: 78px;
+    padding: 12px 14px;
+    border-radius: 18px;
+  }
+
+  .intro-emoji {
+    font-size: 28px;
+  }
+
+  .intro-copy {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .intro-cta {
+    height: 56px;
+    font-size: 24px;
+    border-radius: 14px;
+  }
 }
 
 .topbar {
