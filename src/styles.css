@@ -276,6 +276,7 @@ body {
   letter-spacing: -0.02em;
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", sans-serif;
   color: #3f6175;
+  white-space: nowrap;
 }
 
 .env-badge {
@@ -294,8 +295,9 @@ body {
 }
 
 .top-actions .btn {
-  font-size: 12px;
-  padding: 12px 15px;
+  font-size: 11px;
+  padding: 8px 10px;
+  white-space: nowrap;
 }
 
 .summary-card {
