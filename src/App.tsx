@@ -21,11 +21,11 @@ type Selection = { kind: 'node'; value: FlowNode } | { kind: 'none' };
 type ComposerKind = 'account' | 'card' | 'expense' | 'salary';
 type AccountSubtype = 'spending' | 'invest' | 'saving_spend' | 'saving_reserve' | 'pension';
 
-const CANVAS_WIDTH = 356;
+const CANVAS_WIDTH = 392;
 const CANVAS_HEIGHT = 560;
-const NODE_BOX_WIDTH = 48;
-const SALARY_NODE_WIDTH = 48;
-const NODE_SIDE_GUTTER = 8;
+const NODE_BOX_WIDTH = 53;
+const SALARY_NODE_WIDTH = 53;
+const NODE_SIDE_GUTTER = 4;
 const ACCOUNT_ROW_LIMIT = 7;
 const CARD_ROW_LIMIT = 5;
 const EXPENSE_ROW_LIMIT = 5;
@@ -50,6 +50,14 @@ const THEMES: Record<ThemeName, { className: string }> = {
 };
 
 function nodeClass(type: NodeType, subtype?: string): string {
+  const typeClass =
+    type === 'salary_account'
+      ? 'node-salary'
+      : type === 'asset_account'
+        ? 'node-account'
+        : type === 'payment_instrument'
+          ? 'node-payment'
+          : 'node-expense';
   const subtypeClass =
     type === 'asset_account'
       ? (subtype === 'invest' ? 'node-account-invest'
@@ -58,7 +66,7 @@ function nodeClass(type: NodeType, subtype?: string): string {
             : subtype === 'saving_reserve' || subtype === 'saving' ? 'node-account-saving-reserve'
               : 'node-account-spending')
       : '';
-  return `node-shape node-card ${subtypeClass}`.trim();
+  return `node-shape ${typeClass} ${subtypeClass}`.trim();
 }
 
 function normalizeAccountSubtype(value?: string): AccountSubtype {
@@ -643,7 +651,7 @@ function AppBody() {
   return (
     <main className="app-stage">
       <section className="mobile-frame">
-        <div className={`app-shell ${themeClass}`}>
+        <div className={`app-shell ${themeClass} ${showIntro ? 'app-shell-intro' : ''}`}>
           {showIntro ? (
             <section className="intro-screen">
               <p className="intro-eyebrow">MOBILE ONLY MONEY FLOW</p>
