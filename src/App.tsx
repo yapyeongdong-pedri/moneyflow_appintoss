@@ -182,7 +182,7 @@ function BottomSheet({
 }
 
 function AppBody() {
-  const { fitView, setViewport } = useReactFlow();
+  const { fitView, setViewport, getViewport } = useReactFlow();
   const [history, setHistory] = useState<GraphHistoryState | null>(null);
   const [showIntro, setShowIntro] = useState(true);
   const [message, setMessage] = useState('');
@@ -193,6 +193,7 @@ function AppBody() {
   const [showTopHint, setShowTopHint] = useState(false);
   const [canTopMove, setCanTopMove] = useState(false);
   const topHintTimerRef = useRef<number | null>(null);
+  const lockedViewportXRef = useRef(0);
 
   const [kind, setKind] = useState<ComposerKind>('account');
   const [accountSubtype, setAccountSubtype] = useState<AccountSubtype>('spending');
@@ -234,6 +235,9 @@ function AppBody() {
   useEffect(() => { if (!message) return; const t = window.setTimeout(() => setMessage(''), 2200); return () => window.clearTimeout(t); }, [message]);
   const focusMiniView = () => {
     void fitView({ padding: DEFAULT_VIEW_PADDING, duration: 280, maxZoom: DEFAULT_VIEW_MAX_ZOOM });
+    window.setTimeout(() => {
+      lockedViewportXRef.current = getViewport().x;
+    }, 320);
   };
 
   useEffect(() => {
@@ -319,6 +323,9 @@ function AppBody() {
   };
 
   const handleFlowMove = (event: unknown, viewport: { x: number; y: number; zoom: number }) => {
+    if (Math.abs(viewport.x - lockedViewportXRef.current) > 0.5) {
+      void setViewport({ x: lockedViewportXRef.current, y: viewport.y, zoom: viewport.zoom }, { duration: 0 });
+    }
     const movedDown = viewport.y > 8;
     setCanTopMove(movedDown);
     const isScrollEvent = event instanceof WheelEvent;
@@ -329,8 +336,8 @@ function AppBody() {
   };
 
   const handleFlowMoveEnd = (_event: unknown, viewport: { x: number; y: number; zoom: number }) => {
-    if (Math.abs(viewport.x) > 1) {
-      void setViewport({ x: 0, y: viewport.y, zoom: viewport.zoom }, { duration: 120 });
+    if (Math.abs(viewport.x - lockedViewportXRef.current) > 0.5) {
+      void setViewport({ x: lockedViewportXRef.current, y: viewport.y, zoom: viewport.zoom }, { duration: 80 });
     }
   };
 
@@ -507,7 +514,7 @@ function AppBody() {
                   type="button"
                   className="scroll-top-chip"
                   onClick={() => {
-                    void setViewport({ x: 0, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 260 });
+                    void setViewport({ x: lockedViewportXRef.current, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 260 });
                     setShowTopHint(false);
                   }}
                 >
