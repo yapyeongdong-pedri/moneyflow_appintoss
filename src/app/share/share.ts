@@ -1,4 +1,4 @@
-import { toPng } from 'html-to-image';
+﻿import { toPng } from 'html-to-image';
 import { FlowGraph } from '../../domain/graph-model';
 import { detectEnvironment } from '../../infra/environment';
 
@@ -32,7 +32,7 @@ export async function exportGraphPng(element: HTMLElement): Promise<void> {
 
 export async function shareGraph(graph: FlowGraph): Promise<string> {
   const title = 'Money Flow';
-  const text = `내 자산 흐름 구조를 공유해요. 노드 ${graph.nodes.length}개, 연결 ${graph.edges.length}개`;
+  const text = `내 Money Flow를 공유해요. 노드 ${graph.nodes.length}개, 연결 ${graph.edges.length}개`;
   const env = detectEnvironment();
 
   if (env !== 'web') {
@@ -53,18 +53,18 @@ export async function shareGraph(graph: FlowGraph): Promise<string> {
           }
         });
         await maybeShare({ title, text, url });
-        return 'Toss 공유가 완료됐어요.';
+        return 'Toss 공유를 완료했어요.';
       }
     } catch {
-      // Toss SDK 미지원 시 웹 공유 fallback
+      // Toss SDK를 사용할 수 없는 경우 웹 공유로 fallback
     }
   }
 
   if (navigator.share) {
     await navigator.share({ title, text, url: location.href });
-    return '웹 공유가 완료됐어요.';
+    return '공유를 완료했어요.';
   }
 
   await navigator.clipboard.writeText(`${title}\n${text}\n${location.href}`);
-  return '공유 API가 없어 링크를 클립보드에 복사했어요.';
+  return '공유 API를 사용할 수 없어 링크를 클립보드에 복사했어요.';
 }
