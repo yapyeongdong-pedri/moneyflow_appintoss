@@ -326,6 +326,7 @@ body {
 }
 
 .canvas-wrap {
+  position: relative;
   flex: 1;
   margin: 10px 10px 0;
   border-radius: 18px;
@@ -337,6 +338,36 @@ body {
   border: 1px solid #dbe6f1;
   box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
   min-height: 0;
+}
+
+.canvas-bands {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+}
+
+.canvas-band {
+  position: relative;
+  border-bottom: 1px solid rgba(122, 144, 164, 0.14);
+}
+
+.canvas-band-1 { background: rgba(106, 153, 204, 0.06); }
+.canvas-band-2 { background: rgba(106, 153, 204, 0.04); }
+.canvas-band-3 { background: rgba(106, 153, 204, 0.03); }
+.canvas-band-4 { background: rgba(106, 153, 204, 0.025); }
+.canvas-band-5 { background: rgba(106, 153, 204, 0.02); }
+
+.canvas-band-label {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(82, 96, 110, 0.62);
+  letter-spacing: -0.01em;
 }
 
 .btn {
@@ -483,7 +514,7 @@ select {
 
 .banner-placeholder {
   width: 100%;
-  height: 96px;
+  height: 48px;
   border-radius: 10px;
   border: 1px dashed #b8c2ce;
   background: linear-gradient(90deg, #f2f6fc, #eef4ff);
@@ -553,9 +584,7 @@ select {
   right: 8px;
   bottom: 6px;
   border-radius: 6px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
-    linear-gradient(160deg, rgba(0, 0, 0, 0.07), rgba(0, 0, 0, 0.01));
+  background: transparent;
   pointer-events: none;
 }
 
@@ -668,7 +697,7 @@ select {
 .node-salary .node-main-label {
   font-size: 14px;
   line-height: 1;
-  margin-top: 4px;
+  margin-top: 9px;
 }
 
 .node-expense .node-main-label {
@@ -712,6 +741,18 @@ select {
 
 .react-flow__arrowhead path {
   transition: fill 170ms ease;
+}
+
+.react-flow {
+  position: relative;
+  z-index: 1;
+}
+
+.react-flow__handle {
+  opacity: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 430px) {

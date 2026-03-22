@@ -27,7 +27,9 @@ const CANVAS_HEIGHT = 560;
 const NODE_BOX_WIDTH = 66;
 const SALARY_NODE_WIDTH = 84;
 const NODE_SIDE_GUTTER = 8;
-const MAX_ROW_NODES = 5;
+const ACCOUNT_ROW_LIMIT = 7;
+const CARD_ROW_LIMIT = 5;
+const EXPENSE_ROW_LIMIT = 5;
 const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
@@ -68,6 +70,10 @@ function normalizeAccountSubtype(value?: string): AccountSubtype {
 function isUpperAsset(node: FlowNode): boolean {
   if (node.type !== 'asset_account') return false;
   const subtype = normalizeAccountSubtype(node.meta?.subtype as string | undefined);
+  return subtype === 'invest' || subtype === 'pension' || subtype === 'saving_reserve';
+}
+
+function isUpperSubtype(subtype: AccountSubtype): boolean {
   return subtype === 'invest' || subtype === 'pension' || subtype === 'saving_reserve';
 }
 
@@ -117,16 +123,15 @@ function starterGraph(): FlowGraph {
 }
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
-  const rowBand = CANVAS_HEIGHT / 4;
-  const fiveBand = rowBand * 0.8;
+  const rowBand = CANVAS_HEIGHT / 5;
   const rowTopInset = 10;
   const rowY: Record<string, number> = {
-    asset_upper: Math.round(fiveBand * 0 + rowTopInset),
-    salary_account: Math.round(fiveBand * 1 + rowTopInset),
-    asset_account: Math.round(fiveBand * 2 + rowTopInset),
-    payment_instrument: Math.round(fiveBand * 3 + rowTopInset),
-    expense_category: Math.round(fiveBand * 4 + rowTopInset),
-    other: Math.round(fiveBand * 4 + rowTopInset)
+    asset_upper: Math.round(rowBand * 0 + rowTopInset),
+    salary_account: Math.round(rowBand * 1 + rowTopInset),
+    asset_account: Math.round(rowBand * 2 + rowTopInset),
+    payment_instrument: Math.round(rowBand * 3 + rowTopInset),
+    expense_category: Math.round(rowBand * 4 + rowTopInset),
+    other: Math.round(rowBand * 4 + rowTopInset)
   };
 
   const incoming = new Map<string, string[]>();
@@ -158,9 +163,17 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
     return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
   };
 
+  const rowLimit = (rowKey: string): number => {
+    if (rowKey === 'salary_account') return 1;
+    if (rowKey === 'asset_upper' || rowKey === 'asset_account') return ACCOUNT_ROW_LIMIT;
+    if (rowKey === 'payment_instrument') return CARD_ROW_LIMIT;
+    if (rowKey === 'expense_category') return EXPENSE_ROW_LIMIT;
+    return EXPENSE_ROW_LIMIT;
+  };
+
   const positionRow = (rowKey: string, nodes: FlowNode[], yPos: number) => {
     if (!nodes.length) return;
-    const rowNodes = rowKey === 'salary_account' ? nodes.slice(0, 1) : nodes.slice(0, MAX_ROW_NODES);
+    const rowNodes = nodes.slice(0, rowLimit(rowKey));
     const xs = slotX(rowNodes.length);
     if (rowKey === 'salary_account') {
       const salary = rowNodes[0];
@@ -584,8 +597,11 @@ function AppBody() {
     if (!history) return;
     try {
       if (kind === 'account') {
-        const currentAccounts = history.present.nodes.filter((n) => n.type === 'asset_account').length;
-        if (currentAccounts >= MAX_ROW_NODES) return setMessage('계좌 노드는 최대 5개까지 추가할 수 있어요.');
+        const upperAccounts = history.present.nodes.filter((n) => n.type === 'asset_account' && isUpperAsset(n)).length;
+        const lowerAccounts = history.present.nodes.filter((n) => n.type === 'asset_account' && !isUpperAsset(n)).length;
+        const targetUpper = isUpperSubtype(accountSubtype);
+        if (targetUpper && upperAccounts >= ACCOUNT_ROW_LIMIT) return setMessage(`1행 계좌(저축/투자)는 최대 ${ACCOUNT_ROW_LIMIT}개까지 추가할 수 있어요.`);
+        if (!targetUpper && lowerAccounts >= ACCOUNT_ROW_LIMIT) return setMessage(`3행 계좌(지출 통장)는 최대 ${ACCOUNT_ROW_LIMIT}개까지 추가할 수 있어요.`);
         if (!accountPurpose.trim() || !accountBank.trim() || !accountLinkSourceId) return setMessage('계좌 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'asset_account', name: accountPurpose.trim(), meta: { subtype: accountSubtype, institution: accountBank.trim(), purpose: accountPurpose.trim(), linkSourceId: accountLinkSourceId, note: accountMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
@@ -595,7 +611,7 @@ function AppBody() {
       }
       if (kind === 'card') {
         const currentCards = history.present.nodes.filter((n) => n.type === 'payment_instrument').length;
-        if (currentCards >= MAX_ROW_NODES) return setMessage('카드 노드는 최대 5개까지 추가할 수 있어요.');
+        if (currentCards >= CARD_ROW_LIMIT) return setMessage(`카드 노드는 최대 ${CARD_ROW_LIMIT}개까지 추가할 수 있어요.`);
         if (!cardPurpose.trim() || !cardIssuer.trim() || !cardLinkAccountId) return setMessage('카드 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'payment_instrument', name: cardPurpose.trim(), meta: { institution: cardIssuer.trim(), purpose: cardPurpose.trim(), linkSourceId: cardLinkAccountId, note: cardMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
@@ -605,7 +621,7 @@ function AppBody() {
       }
       if (kind === 'expense') {
         const currentExpenses = history.present.nodes.filter((n) => n.type === 'expense_category').length;
-        if (currentExpenses >= MAX_ROW_NODES) return setMessage('지출항목 노드는 최대 5개까지 추가할 수 있어요.');
+        if (currentExpenses >= EXPENSE_ROW_LIMIT) return setMessage(`지출항목 노드는 최대 ${EXPENSE_ROW_LIMIT}개까지 추가할 수 있어요.`);
         if (!expenseType.trim() || !expenseLinkSourceId) return setMessage('지출 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'expense_category', name: expenseType.trim(), meta: { expenseType: expenseType.trim(), linkSourceId: expenseLinkSourceId, note: expenseMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
@@ -648,7 +664,16 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas" ref={(el) => { canvasWrapRef.current = el; }}><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={lockedZoom} maxZoom={lockedZoom} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas" ref={(el) => { canvasWrapRef.current = el; }}>
+                <div className="canvas-bands" aria-hidden>
+                  <div className="canvas-band canvas-band-1"><span className="canvas-band-label">저축 / 투자</span></div>
+                  <div className="canvas-band canvas-band-2"><span className="canvas-band-label">월급통장</span></div>
+                  <div className="canvas-band canvas-band-3"><span className="canvas-band-label">지출 통장</span></div>
+                  <div className="canvas-band canvas-band-4"><span className="canvas-band-label">카드</span></div>
+                  <div className="canvas-band canvas-band-5"><span className="canvas-band-label">지출 항목</span></div>
+                </div>
+                <ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={lockedZoom} maxZoom={lockedZoom} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow>
+              </section>
 
               {selection.kind === 'node' && !detailOpen && (
                 <section className="node-quickbar">
