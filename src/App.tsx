@@ -23,14 +23,16 @@ type ComposerKind = 'account' | 'card' | 'expense';
 type AccountSubtype = 'spending' | 'invest' | 'saving' | 'pension';
 
 const CANVAS_WIDTH = 356;
-const NODE_BOX_WIDTH = 134;
-const NODE_SIDE_GUTTER = 10;
-const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, 5200]];
-const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, 5200]];
+const CANVAS_HEIGHT = 960;
+const NODE_BOX_WIDTH = 128;
+const NODE_SIDE_GUTTER = 12;
+const MAX_ROW_NODES = 5;
+const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
+const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
 const SALARY_X = Math.round(CANVAS_CENTER_X - NODE_BOX_WIDTH / 2);
-const DEFAULT_VIEW_PADDING = 0.38;
-const DEFAULT_VIEW_MAX_ZOOM = 0.56;
+const DEFAULT_VIEW_PADDING = 0.08;
+const DEFAULT_VIEW_MAX_ZOOM = 1;
 
 const THEMES: Record<ThemeName, { className: string }> = {
   'calm-mint': { className: 'theme-calm-mint' },
@@ -89,12 +91,12 @@ function starterGraph(): FlowGraph {
 }
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
-  const rowY: Record<string, number> = {
-    salary_account: 94,
-    asset_account: 150,
-    payment_instrument: 310,
-    expense_category: 470,
-    other: 630
+  const rowY: Record<string, number[]> = {
+    salary_account: [Math.round((CANVAS_HEIGHT / 4) * 0.35)],
+    asset_account: [Math.round((CANVAS_HEIGHT / 4) * 1.2), Math.round((CANVAS_HEIGHT / 4) * 1.62)],
+    payment_instrument: [Math.round((CANVAS_HEIGHT / 4) * 2.2), Math.round((CANVAS_HEIGHT / 4) * 2.62)],
+    expense_category: [Math.round((CANVAS_HEIGHT / 4) * 3.2), Math.round((CANVAS_HEIGHT / 4) * 3.62)],
+    other: [Math.round((CANVAS_HEIGHT / 4) * 3.2), Math.round((CANVAS_HEIGHT / 4) * 3.62)]
   };
 
   const incoming = new Map<string, string[]>();
@@ -126,16 +128,16 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
     return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
   };
 
-  const positionRow = (rowKey: string, nodes: FlowNode[], y: number) => {
+  const positionRow = (rowKey: string, nodes: FlowNode[], yList: number[]) => {
     if (!nodes.length) return;
-    const maxPerLine = 3;
-    const lineGap = 58;
-    const lines = Math.ceil(nodes.length / maxPerLine);
+    const maxPerLine = rowKey === 'salary_account' ? 1 : 3;
+    const rowNodes = nodes.slice(0, MAX_ROW_NODES);
+    const lines = Math.ceil(rowNodes.length / maxPerLine);
 
     for (let line = 0; line < lines; line += 1) {
-      const lineNodes = nodes.slice(line * maxPerLine, (line + 1) * maxPerLine);
+      const lineNodes = rowNodes.slice(line * maxPerLine, (line + 1) * maxPerLine);
       const xs = slotX(lineNodes.length);
-      const yPos = y + line * lineGap;
+      const yPos = yList[Math.min(line, yList.length - 1)];
       lineNodes.forEach((node, index) => {
         const x = rowKey === 'salary_account' ? SALARY_X : xs[index];
         xById.set(node.id, x);
@@ -453,6 +455,8 @@ function AppBody() {
     if (!history) return;
     try {
       if (kind === 'account') {
+        const currentAccounts = history.present.nodes.filter((n) => n.type === 'asset_account').length;
+        if (currentAccounts >= MAX_ROW_NODES) return setMessage('계좌 노드는 최대 5개까지 추가할 수 있어요.');
         if (!accountPurpose.trim() || !accountBank.trim() || !accountLinkSourceId) return setMessage('계좌 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'asset_account', name: accountPurpose.trim(), meta: { subtype: accountSubtype, institution: accountBank.trim(), purpose: accountPurpose.trim(), linkSourceId: accountLinkSourceId, note: accountMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
@@ -461,6 +465,8 @@ function AppBody() {
         setMessage('계좌 노드를 추가했어요.');
       }
       if (kind === 'card') {
+        const currentCards = history.present.nodes.filter((n) => n.type === 'payment_instrument').length;
+        if (currentCards >= MAX_ROW_NODES) return setMessage('카드 노드는 최대 5개까지 추가할 수 있어요.');
         if (!cardPurpose.trim() || !cardIssuer.trim() || !cardLinkAccountId) return setMessage('카드 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'payment_instrument', name: cardPurpose.trim(), meta: { institution: cardIssuer.trim(), purpose: cardPurpose.trim(), linkSourceId: cardLinkAccountId, note: cardMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
@@ -469,6 +475,8 @@ function AppBody() {
         setMessage('카드 노드를 추가했어요.');
       }
       if (kind === 'expense') {
+        const currentExpenses = history.present.nodes.filter((n) => n.type === 'expense_category').length;
+        if (currentExpenses >= MAX_ROW_NODES) return setMessage('지출항목 노드는 최대 5개까지 추가할 수 있어요.');
         if (!expenseType.trim() || !expenseLinkSourceId) return setMessage('지출 정보를 입력해 주세요.');
         let h = addNode(history, { type: 'expense_category', name: expenseType.trim(), meta: { expenseType: expenseType.trim(), linkSourceId: expenseLinkSourceId, note: expenseMemo.trim() || undefined }, x: 148, y: 760 });
         const node = h.present.nodes[h.present.nodes.length - 1];
@@ -511,7 +519,7 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={true} panOnDrag={true} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: DEFAULT_VIEW_PADDING, maxZoom: DEFAULT_VIEW_MAX_ZOOM }} fitView><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: DEFAULT_VIEW_PADDING, maxZoom: DEFAULT_VIEW_MAX_ZOOM }} fitView><Background /></ReactFlow></section>
 
               {canTopMove && showTopHint && (
                 <button
