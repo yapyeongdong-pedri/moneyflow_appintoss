@@ -21,11 +21,11 @@ type Selection = { kind: 'node'; value: FlowNode } | { kind: 'none' };
 type ComposerKind = 'account' | 'card' | 'expense' | 'salary';
 type AccountSubtype = 'spending' | 'invest' | 'saving_spend' | 'saving_reserve' | 'pension';
 
-const CANVAS_WIDTH = 392;
+const CANVAS_WIDTH = 424;
 const CANVAS_HEIGHT = 560;
-const NODE_BOX_WIDTH = 53;
-const SALARY_NODE_WIDTH = 53;
-const NODE_SIDE_GUTTER = 4;
+const NODE_BOX_WIDTH = 58;
+const SALARY_NODE_WIDTH = 58;
+const NODE_SIDE_GUTTER = 2;
 const ACCOUNT_ROW_LIMIT = 7;
 const CARD_ROW_LIMIT = 5;
 const EXPENSE_ROW_LIMIT = 5;
@@ -35,12 +35,27 @@ const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
 const SALARY_X = Math.round(CANVAS_CENTER_X - SALARY_NODE_WIDTH / 2);
 const DEFAULT_VIEW_MAX_ZOOM = 1;
 
-const INSTITUTION_OPTIONS = [
+const ACCOUNT_INSTITUTION_OPTIONS = [
   '경남은행', '광주은행', '국민은행', '기업은행', '농협은행', '대구은행', '부산은행', '수협은행', '신한은행', '우리은행', '전북은행',
   'SC제일은행', '제주은행', '하나은행', '한국산업은행', '한국수출입은행', '한국씨티은행', '케이뱅크', '토스뱅크', 'KEB하나은행', '카카오뱅크',
   '하이투자증권', 'SK증권', '교보증권', '신한금융투자', '대신증권', '미래에셋대우', '하나금융투자', 'DB금융투자', '유안타증권', '리딩투자증권',
   '메리츠증권', '부국증권', '삼성증권', '유진투자증권', 'NH투자증권', '신영증권', '유화증권', '키움증권', '한화투자증권', '한국투자증권',
   'KB투자증권', '한양증권'
+];
+
+const CARD_ISSUER_OPTIONS = [
+  '삼성카드',
+  '현대카드',
+  'KB국민카드',
+  '신한카드',
+  '비씨카드',
+  '하나카드',
+  '롯데카드',
+  '우리카드',
+  '토스뱅크',
+  '카카오뱅크',
+  '케이뱅크',
+  '트레블월렛'
 ];
 
 const THEMES: Record<ThemeName, { className: string }> = {
@@ -715,26 +730,29 @@ function AppBody() {
 
               <BottomSheet open={composerOpen} title="노드 추가" onClose={() => setComposerOpen(false)} align="center">
                 <div className="sheet-segment"><button type="button" className={kind === 'account' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('account')}>계좌</button><button type="button" className={kind === 'card' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('card')}>카드</button><button type="button" className={kind === 'expense' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('expense')}>지출항목</button></div>
-                {kind === 'account' && <div className="sheet-form"><label>계좌 구분 *<select required value={accountSubtype} onChange={(e) => setAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving_spend">적금(지출용)</option><option value="saving_reserve">적금(저축용)</option><option value="pension">연금</option></select></label><label>은행명 *<input list="institution-options" required value={accountBank} onChange={(e) => setAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도 *<input required value={accountPurpose} onChange={(e) => setAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌 *<select required value={accountLinkSourceId} onChange={(e) => setAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={accountMemo} onChange={(e) => setAccountMemo(e.target.value)} maxLength={40} /></label></div>}
-                {kind === 'card' && <div className="sheet-form"><label>카드명 *<input list="institution-options" required value={cardIssuer} onChange={(e) => setCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도 *<input required value={cardPurpose} onChange={(e) => setCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌 *<select required value={cardLinkAccountId} onChange={(e) => setCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={cardMemo} onChange={(e) => setCardMemo(e.target.value)} maxLength={40} /></label></div>}
+                {kind === 'account' && <div className="sheet-form"><label>은행/증권사 *<input list="institution-options" required value={accountBank} onChange={(e) => setAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 구분 *<select required value={accountSubtype} onChange={(e) => setAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving_spend">적금(지출용)</option><option value="saving_reserve">적금(저축용)</option><option value="pension">연금</option></select></label><label>계좌 용도 *<input required value={accountPurpose} onChange={(e) => setAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌 *<select required value={accountLinkSourceId} onChange={(e) => setAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={accountMemo} onChange={(e) => setAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {kind === 'card' && <div className="sheet-form"><label>카드사명 *<input list="card-issuer-options" required value={cardIssuer} onChange={(e) => setCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도 *<input required value={cardPurpose} onChange={(e) => setCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌 *<select required value={cardLinkAccountId} onChange={(e) => setCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={cardMemo} onChange={(e) => setCardMemo(e.target.value)} maxLength={40} /></label></div>}
                 {kind === 'expense' && <div className="sheet-form"><label>지출항목 종류 *<input required value={expenseType} onChange={(e) => setExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드 *<select required value={expenseLinkSourceId} onChange={(e) => setExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{expenseSourceLabel(n)}</option>)}</select></label><label>기타 메모<input value={expenseMemo} onChange={(e) => setExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={addByComposer}>추가하기</button><button type="button" className="btn btn-weak" onClick={() => { const next = replaceGraph(history, prettyLayout(history.present)); setHistory(next); setMessage('노드를 다시 정렬했어요.'); }}>다시 정렬</button></div>
               </BottomSheet>
 
               <BottomSheet open={detailOpen && selection.kind !== 'none'} title="노드 상세 수정" onClose={() => setDetailOpen(false)} align="center">
-                {detailKind === 'salary' && <div className="sheet-form"><label>은행명<input list="institution-options" value={detailSalaryBank} onChange={(e) => setDetailSalaryBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value="월급통장" readOnly /></label></div>}
-                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving_spend">적금(지출용)</option><option value="saving_reserve">적금(저축용)</option><option value="pension">연금</option></select></label><label>은행명<input list="institution-options" value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
-                {detailKind === 'card' && <div className="sheet-form"><label>카드명<input list="institution-options" value={detailCardIssuer} onChange={(e) => setDetailCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도<input value={detailCardPurpose} onChange={(e) => setDetailCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌<select value={detailCardLinkAccountId} onChange={(e) => setDetailCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailCardMemo} onChange={(e) => setDetailCardMemo(e.target.value)} maxLength={40} /></label></div>}
+                {detailKind === 'salary' && <div className="sheet-form"><label>은행/증권사<input list="institution-options" value={detailSalaryBank} onChange={(e) => setDetailSalaryBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value="월급통장" readOnly /></label></div>}
+                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving_spend">적금(지출용)</option><option value="saving_reserve">적금(저축용)</option><option value="pension">연금</option></select></label><label>은행/증권사<input list="institution-options" value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {detailKind === 'card' && <div className="sheet-form"><label>카드사명<input list="card-issuer-options" value={detailCardIssuer} onChange={(e) => setDetailCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도<input value={detailCardPurpose} onChange={(e) => setDetailCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌<select value={detailCardLinkAccountId} onChange={(e) => setDetailCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailCardMemo} onChange={(e) => setDetailCardMemo(e.target.value)} maxLength={40} /></label></div>}
                 {detailKind === 'expense' && <div className="sheet-form"><label>지출항목 종류<input value={detailExpenseType} onChange={(e) => setDetailExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드<select value={detailExpenseLinkSourceId} onChange={(e) => setDetailExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{expenseSourceLabel(n)}</option>)}</select></label><label>기타 메모<input value={detailExpenseMemo} onChange={(e) => setDetailExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={saveDetailNode}>저장</button><button type="button" className="btn btn-danger" onClick={() => { if (!detailNodeId) return; const target = history.present.nodes.find((n) => n.id === detailNodeId); if (!target) return; if (target.type === 'salary_account') return setMessage('월급통장은 삭제할 수 없어요.'); const next = removeNode(history, detailNodeId); setHistory(replaceGraph(next, prettyLayout(next.present))); setSelection({ kind: 'none' }); setDetailOpen(false); }}>삭제</button></div>
               </BottomSheet>
 
               <BottomSheet open={resetConfirmOpen} title="노드 초기화" onClose={() => setResetConfirmOpen(false)}>
-                <div className="sheet-form"><p>데이터가 모두 삭제됩니다.</p><div className="sheet-inline-buttons"><button type="button" className="btn btn-danger" onClick={() => { const starter = starterGraph(); setHistory(replaceGraph(history, starter)); setSelection({ kind: 'none' }); setComposerOpen(false); setDetailOpen(false); setResetConfirmOpen(false); window.setTimeout(() => focusMiniView(), 60); setMessage('초기화가 완료됐어요.'); }}>전체 초기화</button><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(false)}>취소</button></div></div>
+                <div className="sheet-form"><p>데이터가 모두 삭제됩니다.</p><div className="sheet-inline-buttons"><button type="button" className="btn btn-danger" onClick={() => { const starter = starterGraph(); setHistory(replaceGraph(history, prettyLayout(starter))); setSelection({ kind: 'none' }); setComposerOpen(false); setDetailOpen(false); setResetConfirmOpen(false); window.setTimeout(() => focusMiniView(), 60); setMessage('초기화가 완료됐어요.'); }}>전체 초기화</button><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(false)}>취소</button></div></div>
               </BottomSheet>
 
               <datalist id="institution-options">
-                {INSTITUTION_OPTIONS.map((item) => <option key={item} value={item} />)}
+                {ACCOUNT_INSTITUTION_OPTIONS.map((item) => <option key={item} value={item} />)}
+              </datalist>
+              <datalist id="card-issuer-options">
+                {CARD_ISSUER_OPTIONS.map((item) => <option key={item} value={item} />)}
               </datalist>
 
               {message && <div className="toast">{message}</div>}

@@ -1,7 +1,7 @@
 :root {
   font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
   line-height: 1.45;
-  --node-width: 53px;
+  --node-width: 58px;
   --node-min-height: 38px;
 }
 
@@ -27,11 +27,11 @@ body {
   height: 100%;
   display: grid;
   place-items: center;
-  padding: 6px;
+  padding: 0;
 }
 
 .mobile-frame {
-  width: min(100vw, 440px);
+  width: min(100vw, 460px);
   height: min(100dvh, 844px);
   border-radius: 28px;
   overflow: hidden;
@@ -329,7 +329,7 @@ body {
 .canvas-wrap {
   position: relative;
   flex: 1;
-  margin: 6px 4px 0;
+  margin: 6px 2px 0;
   border-radius: 14px;
   overflow: hidden;
   background: #ffffff;
@@ -543,7 +543,7 @@ select {
   text-align: left;
   color: #fff;
   background: var(--accent);
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   box-shadow: 0 8px 14px rgba(17, 24, 39, 0.2);
   transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
   overflow: hidden;
@@ -646,9 +646,16 @@ select {
 
 .node-account .node-main-label,
 .node-payment .node-main-label {
-  margin-top: 9px;
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  margin-top: 0;
   font-size: 11px;
   line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .node-meta-inline {
@@ -673,10 +680,10 @@ select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
 }
 
 .node-type-tag {
