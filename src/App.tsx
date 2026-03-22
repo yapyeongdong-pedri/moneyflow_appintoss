@@ -282,7 +282,28 @@ function AppBody() {
       <section className="mobile-frame">
         <div className={`app-shell ${themeClass}`}>
           {showIntro ? (
-            <section className="intro-screen"><p className="intro-eyebrow">MOBILE ONLY MONEY FLOW</p><h1>'관리비, 통신비 어디서 나가더라?'</h1><p className="intro-body">소중한 내 월급, Money Flow로 관리하세요</p><ol className="intro-steps"><li>🛣️ 월급통장부터 현금 흐름 확인해요</li><li>💰 갖고 있는 통장, 주식, 신용/체크카드 모두 관리해요</li><li>🔎 어디에서 내 돈 나가는지 쉽게 찾아요</li></ol><button type="button" className="btn btn-primary intro-cta" onClick={() => setShowIntro(false)}>내 Money Flow 만들기</button></section>
+            <section className="intro-screen">
+              <p className="intro-eyebrow">MOBILE ONLY MONEY FLOW</p>
+              <h1 className="intro-title">'관리비, 통신비 어디서 나가더라?'</h1>
+              <p className="intro-body">소중한 내 월급, Money Flow로 관리하세요</p>
+              <div className="intro-cards">
+                <div className="intro-card">
+                  <span className="intro-emoji">🛤️</span>
+                  <span className="intro-copy">월급통장부터 현금 흐름 확인해요</span>
+                </div>
+                <div className="intro-card">
+                  <span className="intro-emoji">💰</span>
+                  <span className="intro-copy">갖고 있는 통장, 주식, 신용/체크카드 모두 관리해요</span>
+                </div>
+                <div className="intro-card">
+                  <span className="intro-emoji">🔎</span>
+                  <span className="intro-copy">어디에서 내 돈 나가는지 쉽게 찾아요</span>
+                </div>
+              </div>
+              <button type="button" className="btn btn-primary intro-cta" onClick={() => setShowIntro(false)}>
+                내 Money Flow 만들기
+              </button>
+            </section>
           ) : (
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => setComposerOpen(true)}>노드 추가</button></div></header>
