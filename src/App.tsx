@@ -436,6 +436,10 @@ function AppBody() {
     }
   };
 
+  const selectedNodeLabel = selection.kind === 'node'
+    ? (selection.value.meta?.purpose ?? selection.value.name)
+    : '';
+
   const openDetailForNode = (node: FlowNode) => {
     const incomingEdge = history.present.edges.find((edge) => edge.active && edge.targetId === node.id);
     if (node.type === 'salary_account') {
@@ -618,7 +622,17 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow></section>
+
+              {selection.kind === 'node' && !detailOpen && (
+                <section className="node-quickbar">
+                  <strong>{selectedNodeLabel}</strong>
+                  <div className="node-quickbar-actions">
+                    <button type="button" className="btn btn-primary" onClick={() => openDetailForNode(selection.value)}>수정</button>
+                    <button type="button" className="btn btn-weak" onClick={() => setSelection({ kind: 'none' })}>닫기</button>
+                  </div>
+                </section>
+              )}
 
               {canTopMove && showTopHint && (
                 <button

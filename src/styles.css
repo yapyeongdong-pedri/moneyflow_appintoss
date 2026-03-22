@@ -285,6 +285,35 @@ body {
   color: var(--text-muted);
 }
 
+.node-quickbar {
+  margin: 8px 10px 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d8e4f0;
+  box-shadow: 0 6px 14px rgba(17, 24, 39, 0.08);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.node-quickbar strong {
+  font-size: 12px;
+  line-height: 1.2;
+  color: #13211e;
+}
+
+.node-quickbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.node-quickbar .btn {
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
 .canvas-wrap {
   flex: 1;
   margin: 10px 10px 0;
