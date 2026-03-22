@@ -104,10 +104,11 @@ body {
 .intro-screen h1,
 .intro-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.2;
   letter-spacing: -0.01em;
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
+  color: #3f6175;
 }
 
 .intro-body {
@@ -124,12 +125,12 @@ body {
 .intro-body-line1,
 .intro-body-line2 {
   display: block;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.2;
 }
 
 .intro-body-strong {
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1;
   font-weight: 800;
 }
@@ -138,7 +139,7 @@ body {
   min-height: 0;
   display: grid;
   gap: 24px;
-  margin-top: 18px;
+  margin-top: 88px;
   width: min(100%, 360px);
   align-content: start;
 }
@@ -164,7 +165,7 @@ body {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
-  color: #2f4153;
+  color: #3f6175;
 }
 
 .intro-cta {
@@ -178,7 +179,7 @@ body {
   line-height: 1;
   white-space: nowrap;
   border-radius: 18px;
-  font-size: 70px;
+  font-size: 175px;
   font-weight: 800;
   margin-bottom: calc(4px + env(safe-area-inset-bottom));
   font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
@@ -192,21 +193,22 @@ body {
   }
 
   .intro-title {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.15;
   }
 
   .intro-body-line1,
   .intro-body-line2 {
-    font-size: 12px;
+    font-size: 15px;
   }
 
   .intro-body-strong {
-    font-size: 18px;
+    font-size: 22px;
   }
 
   .intro-cards {
     gap: 20px;
+    margin-top: 88px;
     padding-top: 0;
   }
 
@@ -227,7 +229,7 @@ body {
 
   .intro-cta {
     height: 56px;
-    font-size: 54px;
+    font-size: 135px;
     border-radius: 14px;
   }
 }
