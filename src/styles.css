@@ -29,7 +29,8 @@ body {
 }
 
 .mobile-frame {
-  width: min(100%, 390px);
+  width: 390px;
+  max-width: 100%;
   height: min(100dvh, 844px);
   border-radius: 28px;
   overflow: hidden;
