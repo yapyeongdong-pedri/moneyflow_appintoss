@@ -31,7 +31,6 @@ const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH
 const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
 const SALARY_X = Math.round(CANVAS_CENTER_X - NODE_BOX_WIDTH / 2);
-const DEFAULT_VIEW_PADDING = 0.08;
 const DEFAULT_VIEW_MAX_ZOOM = 1;
 
 const THEMES: Record<ThemeName, { className: string }> = {
@@ -188,7 +187,7 @@ function BottomSheet({
 }
 
 function AppBody() {
-  const { fitView, setViewport, getViewport } = useReactFlow();
+  const { setViewport } = useReactFlow();
   const [history, setHistory] = useState<GraphHistoryState | null>(null);
   const [showIntro, setShowIntro] = useState(true);
   const [message, setMessage] = useState('');
@@ -240,17 +239,15 @@ function AppBody() {
   useEffect(() => { if (history) saveGraph(history.present); }, [history]);
   useEffect(() => { if (!message) return; const t = window.setTimeout(() => setMessage(''), 2200); return () => window.clearTimeout(t); }, [message]);
   const focusMiniView = () => {
-    void fitView({ padding: DEFAULT_VIEW_PADDING, duration: 280, maxZoom: DEFAULT_VIEW_MAX_ZOOM });
-    window.setTimeout(() => {
-      lockedViewportXRef.current = getViewport().x;
-    }, 320);
+    lockedViewportXRef.current = 0;
+    void setViewport({ x: 0, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 180 });
   };
 
   useEffect(() => {
     if (!history || showIntro) return;
     const t = window.setTimeout(() => { focusMiniView(); }, 30);
     return () => window.clearTimeout(t);
-  }, [history?.present.nodes.length, history?.present.edges.length, fitView, showIntro]);
+  }, [history?.present.nodes.length, history?.present.edges.length, setViewport, showIntro]);
 
   useEffect(() => {
     return () => {
@@ -519,7 +516,7 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: DEFAULT_VIEW_PADDING, maxZoom: DEFAULT_VIEW_MAX_ZOOM }} fitView><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow></section>
 
               {canTopMove && showTopHint && (
                 <button
