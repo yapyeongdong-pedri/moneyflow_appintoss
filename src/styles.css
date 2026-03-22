@@ -1,5 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap");
+
 :root {
-  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  font-family: "IBM Plex Sans KR", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
   line-height: 1.45;
   --node-width: 58px;
   --node-min-height: 38px;
@@ -99,36 +101,44 @@ body {
   background: #ffffff;
 }
 
-.intro-eyebrow {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: #44677a;
-}
-
 .intro-screen h1,
 .intro-title {
   margin: 0;
-  font-size: 23.6px;
+  font-size: 16px;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  font-family: "Kermit Extrabold", "Kermit ExtraBold", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
 }
 
 .intro-body {
   margin: 0;
-  font-size: 15px;
   color: #3f6175;
   font-weight: 500;
-  font-family: "Kermit Extrabold", "Kermit ExtraBold", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.intro-body-line1,
+.intro-body-line2 {
+  display: block;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.intro-body-strong {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 800;
 }
 
 .intro-cards {
   min-height: 0;
   display: grid;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 24px;
+  margin-top: 18px;
   width: min(100%, 360px);
   align-content: start;
 }
@@ -151,7 +161,7 @@ body {
 }
 
 .intro-copy {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
   color: #2f4153;
@@ -168,10 +178,10 @@ body {
   line-height: 1;
   white-space: nowrap;
   border-radius: 18px;
-  font-size: 60px;
+  font-size: 70px;
   font-weight: 800;
   margin-bottom: calc(4px + env(safe-area-inset-bottom));
-  font-family: "Kermit Extrabold", "Kermit ExtraBold", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", sans-serif;
 }
 
 @media (max-height: 760px) {
@@ -182,17 +192,22 @@ body {
   }
 
   .intro-title {
-    font-size: 20px;
+    font-size: 14px;
     line-height: 1.15;
   }
 
-  .intro-body {
-    font-size: 13px;
+  .intro-body-line1,
+  .intro-body-line2 {
+    font-size: 12px;
+  }
+
+  .intro-body-strong {
+    font-size: 18px;
   }
 
   .intro-cards {
-    gap: 10px;
-    padding-top: 10px;
+    gap: 20px;
+    padding-top: 0;
   }
 
   .intro-card {
@@ -206,13 +221,13 @@ body {
   }
 
   .intro-copy {
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.25;
   }
 
   .intro-cta {
     height: 56px;
-    font-size: 44px;
+    font-size: 54px;
     border-radius: 14px;
   }
 }
@@ -244,7 +259,7 @@ body {
   line-height: 1;
   font-weight: 900;
   letter-spacing: -0.02em;
-  font-family: "Kermit Extrabold", "Kermit ExtraBold", "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  font-family: "IBM Plex Sans KR", "Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", sans-serif;
 }
 
 .env-badge {

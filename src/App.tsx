@@ -28,7 +28,8 @@ const SALARY_NODE_WIDTH = 58;
 const NODE_SIDE_GUTTER = 2;
 const ACCOUNT_ROW_LIMIT = 7;
 const CARD_ROW_LIMIT = 5;
-const EXPENSE_ROW_LIMIT = 7;
+const EXPENSE_ROW_LIMIT = 14;
+const EXPENSE_ROW_PER_LINE = 7;
 const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
@@ -210,6 +211,40 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       if (Math.abs(a.preferredX - b.preferredX) > 1) return a.preferredX - b.preferredX;
       return a.node.name.localeCompare(b.node.name);
     });
+
+    if (rowKey === 'expense_category') {
+      const minX = NODE_SIDE_GUTTER;
+      const maxX = CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER;
+      const centeredSlots = (count: number): number[] => {
+        if (count <= 0) return [];
+        if (count === 1) return [Math.round((minX + maxX) / 2)];
+        const usableWidth = CANVAS_WIDTH - NODE_SIDE_GUTTER * 2;
+        const maxGap = Math.max(0, Math.floor((usableWidth - count * NODE_BOX_WIDTH) / Math.max(count - 1, 1)));
+        const lineGap = Math.min(4, maxGap);
+        const rowWidth = count * NODE_BOX_WIDTH + Math.max(0, count - 1) * lineGap;
+        const start = Math.max(minX, Math.min(maxX, Math.round((CANVAS_WIDTH - rowWidth) / 2)));
+        return Array.from({ length: count }, (_, idx) => Math.min(maxX, start + idx * (NODE_BOX_WIDTH + lineGap)));
+      };
+
+      const placeLine = (items: Array<{ node: FlowNode }>, y: number) => {
+        const slots = centeredSlots(items.length);
+        items.forEach((item, idx) => {
+          const x = slots[idx];
+          xById.set(item.node.id, x);
+          item.node.ui = { ...item.node.ui, x, y };
+        });
+      };
+
+      if (withPreferred.length <= EXPENSE_ROW_PER_LINE) {
+        placeLine(withPreferred, yPos);
+      } else {
+        const firstLine = withPreferred.slice(0, EXPENSE_ROW_PER_LINE);
+        const secondLine = withPreferred.slice(EXPENSE_ROW_PER_LINE, EXPENSE_ROW_LIMIT);
+        placeLine(firstLine, yPos - 30);
+        placeLine(secondLine, yPos + 30);
+      }
+      return;
+    }
 
     const minX = NODE_SIDE_GUTTER;
     const maxX = CANVAS_WIDTH - NODE_BOX_WIDTH - NODE_SIDE_GUTTER;
@@ -725,9 +760,11 @@ function AppBody() {
         <div className={`app-shell ${themeClass} ${showIntro ? 'app-shell-intro' : ''}`}>
           {showIntro ? (
             <section className="intro-screen">
-              <p className="intro-eyebrow">MOBILE ONLY MONEY FLOW</p>
               <h1 className="intro-title">관리비, 통신비, 구독료<br />어느 통장/카드에서 나가더라?</h1>
-              <p className="intro-body">소중한 내 월급, Money Flow로 관리하세요</p>
+              <p className="intro-body">
+                <span className="intro-body-line1">소중한 내 월급</span>
+                <span className="intro-body-line2"><strong className="intro-body-strong">Money Flow</strong>로 관리하세요</span>
+              </p>
               <div className="intro-cards">
                 <div className="intro-card">
                   <span className="intro-emoji">💸</span>
