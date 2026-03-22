@@ -566,11 +566,11 @@ function AppBody() {
       type: MarkerType.ArrowClosed,
       width: emphasized ? 9 : 8,
       height: emphasized ? 9 : 8,
-      color: emphasized ? '#147de9' : e.active ? '#2f6f9f' : '#8fa9be'
+      color: '#3f6175'
     },
     style: e.active
       ? {
-          stroke: '#2f6f9f',
+          stroke: '#3f6175',
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           strokeDasharray: toExpense ? '6 5' : undefined,
@@ -580,7 +580,7 @@ function AppBody() {
       : {
           opacity: dimmed ? 0.12 : 0.35,
           strokeWidth: 1.8,
-          stroke: '#8fa9be',
+          stroke: '#3f6175',
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           strokeDasharray: toExpense ? '6 5' : undefined

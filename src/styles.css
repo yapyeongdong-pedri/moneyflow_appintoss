@@ -577,10 +577,11 @@ select {
   padding: 5px 6px;
   font-size: 9px;
   text-align: left;
-  color: #fff;
-  background: var(--accent);
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  box-shadow: 0 8px 14px rgba(17, 24, 39, 0.2);
+  color: #3f6175;
+  background: #ffffff;
+  border: 1px solid rgba(63, 97, 117, 0.18);
+  border-left: 4px solid var(--node-accent, #9fb0be);
+  box-shadow: 0 6px 12px rgba(17, 24, 39, 0.12);
   transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
   overflow: hidden;
 }
@@ -599,9 +600,10 @@ select {
   width: var(--node-width);
   min-height: var(--node-min-height);
   border-radius: 10px;
+  --node-accent: #93a5b3;
   background: #ffffff;
-  border: 1px solid rgba(63, 97, 117, 0.24);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(63, 97, 117, 0.2);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
   align-items: center;
   justify-content: center;
 }
@@ -611,7 +613,8 @@ select {
   min-height: var(--node-min-height);
   border-radius: 10px;
   clip-path: none;
-  background: linear-gradient(135deg, #35a793 0%, #207f6e 60%, #185e51 100%);
+  --node-accent: #7f95a7;
+  background: #ffffff;
 }
 
 .node-account::before {
@@ -627,34 +630,31 @@ select {
 }
 
 .node-account-spending {
-  border-color: #9eead8;
+  --node-accent: #6e879a;
 }
 
 .node-account-saving-spend {
-  border-color: #b8e9ff;
-  background: linear-gradient(135deg, #3fa8d8 0%, #2b7fb2 56%, #1d5e88 100%);
+  --node-accent: #5f9bbf;
 }
 
 .node-account-saving-reserve {
-  border-color: #a9efc6;
-  background: linear-gradient(135deg, #2fbf7b 0%, #209a61 56%, #167548 100%);
+  --node-accent: #73ab8b;
 }
 
 .node-account-invest {
-  border-color: #ffd7a4;
-  background: linear-gradient(135deg, #d2943e 0%, #ad7224 56%, #8a5619 100%);
+  --node-accent: #8a82b6;
 }
 
 .node-account-pension {
-  border-color: #d9c7ff;
-  background: linear-gradient(135deg, #8d6fd3 0%, #6f53ba 56%, #523f99 100%);
+  --node-accent: #b0a083;
 }
 
 .node-payment {
   width: var(--node-width);
   min-height: var(--node-min-height);
   border-radius: 10px;
-  background: linear-gradient(135deg, #5f78f5 0%, #445fcd 56%, #354a9e 100%);
+  --node-accent: #8197bf;
+  background: #ffffff;
 }
 
 .node-rounded {
@@ -667,7 +667,8 @@ select {
   width: var(--node-width);
   min-height: var(--node-min-height);
   border-radius: 10px;
-  background: linear-gradient(135deg, #ed8b66 0%, #de6f49 56%, #ba5130 100%);
+  --node-accent: #c49a84;
+  background: #ffffff;
   align-items: center;
 }
 
@@ -680,6 +681,7 @@ select {
   letter-spacing: -0.01em;
   padding-left: 1px;
   padding-bottom: 1px;
+  color: #3f6175;
 }
 
 .node-account .node-main-label,
@@ -719,6 +721,7 @@ select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #3f6175;
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -785,7 +788,7 @@ select {
 
 .react-flow__edge-text {
   font-size: 10px;
-  fill: #24577e;
+  fill: #3f6175;
   font-weight: 700;
 }
 
