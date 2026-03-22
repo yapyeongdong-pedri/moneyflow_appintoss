@@ -32,15 +32,6 @@ const THEMES: Record<ThemeName, { className: string }> = {
   'warm-sand': { className: 'theme-warm-sand' }
 };
 
-const NODE_LABEL: Record<NodeType, string> = {
-  salary_account: '월급통장',
-  income_source: '수입원',
-  asset_account: '계좌',
-  payment_instrument: '카드',
-  expense_category: '지출항목',
-  liability_bucket: '부채 버킷'
-};
-
 function nodeClass(type: NodeType, subtype?: string): string {
   if (type === 'salary_account') return 'node-shape node-salary';
   if (type === 'asset_account') return `node-shape node-account ${subtype ? `node-account-${subtype}` : 'node-account-spending'}`;
