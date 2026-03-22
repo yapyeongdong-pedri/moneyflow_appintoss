@@ -20,11 +20,11 @@ interface FlowNodeData {
 
 type Selection = { kind: 'node'; value: FlowNode } | { kind: 'none' };
 type ComposerKind = 'account' | 'card' | 'expense';
-type AccountSubtype = 'spending' | 'saving' | 'invest';
+type AccountSubtype = 'spending' | 'invest' | 'saving' | 'pension';
 
-const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [860, 5200]];
-const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [860, 5200]];
-const CANVAS_CENTER_X = 430;
+const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [356, 5200]];
+const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [356, 5200]];
+const CANVAS_CENTER_X = 178;
 const DEFAULT_VIEW_PADDING = 0.38;
 const DEFAULT_VIEW_MAX_ZOOM = 0.56;
 
@@ -86,11 +86,11 @@ function starterGraph(): FlowGraph {
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
   const rowY: Record<string, number> = {
-    salary_account: 76,
-    asset_account: 300,
-    payment_instrument: 620,
-    expense_category: 940,
-    other: 1260
+    salary_account: 38,
+    asset_account: 150,
+    payment_instrument: 310,
+    expense_category: 470,
+    other: 630
   };
 
   const incoming = new Map<string, string[]>();
@@ -117,15 +117,15 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
 
   const slotX = (count: number): number[] => {
     if (count <= 1) return [CANVAS_CENTER_X];
-    const minX = 90;
-    const maxX = 770;
+    const minX = 42;
+    const maxX = 314;
     return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
   };
 
   const positionRow = (rowKey: string, nodes: FlowNode[], y: number) => {
     if (!nodes.length) return;
-    const maxPerLine = 5;
-    const lineGap = 116;
+    const maxPerLine = 3;
+    const lineGap = 58;
     const lines = Math.ceil(nodes.length / maxPerLine);
 
     for (let line = 0; line < lines; line += 1) {
@@ -500,14 +500,14 @@ function AppBody() {
             <>
               <header className="topbar"><div className="brand"><h1>Money Flow</h1><span className="env-badge">{env.toUpperCase()}</span></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card"><strong>월급통장에서 시작되는 내 흐름</strong><p>계좌 {history.present.nodes.filter((n) => n.type === 'asset_account').length}개 · 카드 {history.present.nodes.filter((n) => n.type === 'payment_instrument').length}개 · 지출항목 {history.present.nodes.filter((n) => n.type === 'expense_category').length}개</p></section>
-              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} panOnScroll={true} panOnDrag={true} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: DEFAULT_VIEW_PADDING, maxZoom: DEFAULT_VIEW_MAX_ZOOM }} fitView><Background /></ReactFlow></section>
+              <section className="canvas-wrap" id="flow-canvas"><ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) openDetailForNode(s); }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={DEFAULT_VIEW_MAX_ZOOM} maxZoom={DEFAULT_VIEW_MAX_ZOOM} panOnScroll={true} panOnDrag={true} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} fitViewOptions={{ padding: DEFAULT_VIEW_PADDING, maxZoom: DEFAULT_VIEW_MAX_ZOOM }} fitView><Background /></ReactFlow></section>
 
               {canTopMove && showTopHint && (
                 <button
                   type="button"
                   className="scroll-top-chip"
                   onClick={() => {
-                    void setViewport({ x: 0, y: 0, zoom: 1 }, { duration: 260 });
+                    void setViewport({ x: 0, y: 0, zoom: DEFAULT_VIEW_MAX_ZOOM }, { duration: 260 });
                     setShowTopHint(false);
                   }}
                 >
@@ -517,14 +517,14 @@ function AppBody() {
 
               <BottomSheet open={composerOpen} title="노드 추가" onClose={() => setComposerOpen(false)} align="center">
                 <div className="sheet-segment"><button type="button" className={kind === 'account' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('account')}>계좌</button><button type="button" className={kind === 'card' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('card')}>카드</button><button type="button" className={kind === 'expense' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('expense')}>지출항목</button></div>
-                {kind === 'account' && <div className="sheet-form"><label>계좌 구분 (필수)<select required value={accountSubtype} onChange={(e) => setAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="saving">적금</option><option value="invest">투자</option></select></label><label>은행명 (필수)<input required value={accountBank} onChange={(e) => setAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도 (필수)<input required value={accountPurpose} onChange={(e) => setAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌 (필수)<select required value={accountLinkSourceId} onChange={(e) => setAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={accountMemo} onChange={(e) => setAccountMemo(e.target.value)} maxLength={40} /></label></div>}
-                {kind === 'card' && <div className="sheet-form"><label>카드명 (필수)<input required value={cardIssuer} onChange={(e) => setCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도 (필수)<input required value={cardPurpose} onChange={(e) => setCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌 (필수)<select required value={cardLinkAccountId} onChange={(e) => setCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={cardMemo} onChange={(e) => setCardMemo(e.target.value)} maxLength={40} /></label></div>}
-                {kind === 'expense' && <div className="sheet-form"><label>지출항목 종류 (필수)<input required value={expenseType} onChange={(e) => setExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드 (필수)<select required value={expenseLinkSourceId} onChange={(e) => setExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{`${n.meta?.purpose ?? n.name} (${n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : '월급통장'})`}</option>)}</select></label><label>기타 메모<input value={expenseMemo} onChange={(e) => setExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
+                {kind === 'account' && <div className="sheet-form"><label>계좌 구분 *<select required value={accountSubtype} onChange={(e) => setAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving">적금</option><option value="pension">연금</option></select></label><label>은행명 *<input required value={accountBank} onChange={(e) => setAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도 *<input required value={accountPurpose} onChange={(e) => setAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌 *<select required value={accountLinkSourceId} onChange={(e) => setAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={accountMemo} onChange={(e) => setAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {kind === 'card' && <div className="sheet-form"><label>카드명 *<input required value={cardIssuer} onChange={(e) => setCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도 *<input required value={cardPurpose} onChange={(e) => setCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌 *<select required value={cardLinkAccountId} onChange={(e) => setCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={cardMemo} onChange={(e) => setCardMemo(e.target.value)} maxLength={40} /></label></div>}
+                {kind === 'expense' && <div className="sheet-form"><label>지출항목 종류 *<input required value={expenseType} onChange={(e) => setExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드 *<select required value={expenseLinkSourceId} onChange={(e) => setExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{`${n.meta?.purpose ?? n.name} (${n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : '월급통장'})`}</option>)}</select></label><label>기타 메모<input value={expenseMemo} onChange={(e) => setExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={addByComposer}>추가하기</button><button type="button" className="btn btn-weak" onClick={() => { const next = replaceGraph(history, prettyLayout(history.present)); setHistory(next); setMessage('노드를 다시 정렬했어요.'); }}>다시 정렬</button></div>
               </BottomSheet>
 
               <BottomSheet open={detailOpen && selection.kind !== 'none'} title="노드 상세 수정" onClose={() => setDetailOpen(false)} align="center">
-                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="saving">적금</option><option value="invest">투자</option></select></label><label>은행명<input value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving">적금</option><option value="pension">연금</option></select></label><label>은행명<input value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
                 {detailKind === 'card' && <div className="sheet-form"><label>카드명<input value={detailCardIssuer} onChange={(e) => setDetailCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도<input value={detailCardPurpose} onChange={(e) => setDetailCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌<select value={detailCardLinkAccountId} onChange={(e) => setDetailCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailCardMemo} onChange={(e) => setDetailCardMemo(e.target.value)} maxLength={40} /></label></div>}
                 {detailKind === 'expense' && <div className="sheet-form"><label>지출항목 종류<input value={detailExpenseType} onChange={(e) => setDetailExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드<select value={detailExpenseLinkSourceId} onChange={(e) => setDetailExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{`${n.meta?.purpose ?? n.name} (${n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : '월급통장'})`}</option>)}</select></label><label>기타 메모<input value={detailExpenseMemo} onChange={(e) => setDetailExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={saveDetailNode}>저장</button><button type="button" className="btn btn-danger" onClick={() => { if (!detailNodeId) return; const target = history.present.nodes.find((n) => n.id === detailNodeId); if (!target) return; if (target.type === 'salary_account') return setMessage('월급통장은 삭제할 수 없어요.'); const next = removeNode(history, detailNodeId); setHistory(replaceGraph(next, prettyLayout(next.present))); setSelection({ kind: 'none' }); setDetailOpen(false); }}>삭제</button></div>
