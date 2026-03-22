@@ -478,7 +478,7 @@ select {
 }
 
 .node-salary {
-  width: 64px;
+  width: 84px;
   min-height: 42px;
   border-radius: 8px;
   background: linear-gradient(135deg, #0f7f95, #1653ab);
