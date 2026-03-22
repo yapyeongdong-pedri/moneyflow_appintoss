@@ -93,10 +93,10 @@ function createSalaryStarterGraph(): FlowGraph {
       {
         id: 'salary-main',
         type: 'salary_account',
-        name: '월급통장',
+        name: '?붽툒?듭옣',
         meta: {
-          purpose: '메인 통장',
-          institution: '주거래 은행'
+          purpose: '硫붿씤 ?듭옣',
+          institution: '二쇨굅?????
         },
         ui: { x: 138, y: 60 }
       }
@@ -214,16 +214,15 @@ function MobileIntro({ onEnter }: { onEnter: () => void }) {
   return (
     <section className="intro-screen">
       <p className="intro-eyebrow">MOBILE ONLY MONEY FLOW</p>
-      <h1>'관리비, 통신비 어디서 나가더라?'</h1>
-      <p className="intro-body">소중한 내 월급, Money Flow로 관리하세요</p>
+      <h1>'愿由щ퉬, ?듭떊鍮??대뵒???섍??붾씪?'</h1>
+      <p className="intro-body">?뚯쨷?????붽툒, Money Flow濡?愿由ы븯?몄슂</p>
       <ol className="intro-steps">
-        <li>🛣️ 월급통장부터 현금 흐름 확인해요</li>
-        <li>💰 갖고 있는 통장, 주식, 신용/체크카드 모두 관리해요</li>
-        <li>🔎 어디에서 내 돈 나가는지 쉽게 찾아요</li>
+        <li>?썵截??붽툒?듭옣遺???꾧툑 ?먮쫫 ?뺤씤?댁슂</li>
+        <li>?뮥 媛뽮퀬 ?덈뒗 ?듭옣, 二쇱떇, ?좎슜/泥댄겕移대뱶 紐⑤몢 愿由ы빐??/li>
+        <li>?뵊 ?대뵒?먯꽌 ?????섍??붿? ?쎄쾶 李얠븘??/li>
       </ol>
       <button type="button" className="btn btn-primary intro-cta" onClick={onEnter}>
-        내 Money Flow 만들기
-      </button>
+        ??Money Flow 留뚮뱾湲?      </button>
     </section>
   );
 }
@@ -246,7 +245,7 @@ function BottomSheet({
         <header className="sheet-header">
           <strong>{title}</strong>
           <button type="button" className="btn btn-weak" onClick={onClose}>
-            닫기
+            ?リ린
           </button>
         </header>
         <div className="sheet-body">{children}</div>
@@ -285,20 +284,18 @@ function AppBody() {
   useEffect(() => {
     const loaded = loadGraph();
     const base = loaded && loaded.nodes.length ? loaded : createSalaryStarterGraph();
-    const withSalary = base.nodes.some((node) => node.type === 'salary_account')
+    const salaryNode: FlowNode = {
+      id: 'salary-main',
+      type: 'salary_account',
+      name: '월급통장',
+      meta: { purpose: '메인 통장', institution: '주거래 은행' },
+      ui: { x: 138, y: 60 }
+    };
+    const withSalary: FlowGraph = base.nodes.some((node) => node.type === 'salary_account')
       ? base
       : {
           ...base,
-          nodes: [
-            {
-              id: 'salary-main',
-              type: 'salary_account',
-              name: '월급통장',
-              meta: { purpose: '메인 통장', institution: '주거래 은행' },
-              ui: { x: 138, y: 60 }
-            },
-            ...base.nodes
-          ]
+          nodes: [salaryNode, ...base.nodes]
         };
     setHistory(createHistory(applyPrettyMobileLayout(withSalary)));
   }, []);
@@ -363,12 +360,12 @@ function AppBody() {
       let topLabel = '';
       if (node.type === 'asset_account') {
         const purpose = node.meta?.purpose ?? node.name;
-        const institution = node.meta?.institution ?? '은행';
+        const institution = node.meta?.institution ?? '???;
         topLabel = `${purpose} (${institution})`;
       }
       if (node.type === 'payment_instrument') {
         const purpose = node.meta?.purpose ?? node.name;
-        const institution = node.meta?.institution ?? '카드사';
+        const institution = node.meta?.institution ?? '移대뱶??;
         topLabel = `${purpose} (${institution})`;
       }
 
@@ -441,7 +438,7 @@ function AppBody() {
     try {
       if (composerKind === 'account') {
         if (!accountPurpose.trim() || !accountBank.trim() || !accountLinkSourceId) {
-          setMessage('계좌 용도, 은행 종류, 연결 상위 계좌를 입력해 주세요.');
+          setMessage('怨꾩쥖 ?⑸룄, ???醫낅쪟, ?곌껐 ?곸쐞 怨꾩쥖瑜??낅젰??二쇱꽭??');
           return;
         }
         const rootOutDegree = history.present.edges.filter(
@@ -465,19 +462,19 @@ function AppBody() {
         const withEdge = addEdge(withNode, {
           sourceId: accountLinkSourceId,
           targetId: newNode.id,
-          label: '계좌 흐름'
+          label: '怨꾩쥖 ?먮쫫'
         });
         setHistory(replaceGraph(withEdge, applyPrettyMobileLayout(withEdge.present)));
         if (accountLinkSourceId === salaryNodeId && rootOutDegree >= 4) {
-          setMessage('계좌 노드를 추가했어요. 월급통장 직결이 많아지면 중간 허브 계좌로 분리하는 것을 추천해요.');
+          setMessage('怨꾩쥖 ?몃뱶瑜?異붽??덉뼱?? ?붽툒?듭옣 吏곴껐??留롮븘吏硫?以묎컙 ?덈툕 怨꾩쥖濡?遺꾨━?섎뒗 寃껋쓣 異붿쿇?댁슂.');
         } else {
-          setMessage('계좌 노드를 추가했어요.');
+          setMessage('怨꾩쥖 ?몃뱶瑜?異붽??덉뼱??');
         }
       }
 
       if (composerKind === 'card') {
         if (!cardPurpose.trim() || !cardIssuer.trim() || !cardLinkAccountId) {
-          setMessage('카드 용도, 카드사 종류, 연결 계좌를 입력해 주세요.');
+          setMessage('移대뱶 ?⑸룄, 移대뱶??醫낅쪟, ?곌껐 怨꾩쥖瑜??낅젰??二쇱꽭??');
           return;
         }
 
@@ -497,15 +494,15 @@ function AppBody() {
         const withEdge = addEdge(withNode, {
           sourceId: cardLinkAccountId,
           targetId: newNode.id,
-          label: '카드 연결'
+          label: '移대뱶 ?곌껐'
         });
         setHistory(replaceGraph(withEdge, applyPrettyMobileLayout(withEdge.present)));
-        setMessage('카드 노드를 추가했어요.');
+        setMessage('移대뱶 ?몃뱶瑜?異붽??덉뼱??');
       }
 
       if (composerKind === 'expense') {
         if (!expenseType.trim() || !expenseLinkSourceId) {
-          setMessage('지출항목 종류와 연결 대상을 입력해 주세요.');
+          setMessage('吏異쒗빆紐?醫낅쪟? ?곌껐 ??곸쓣 ?낅젰??二쇱꽭??');
           return;
         }
 
@@ -524,10 +521,10 @@ function AppBody() {
         const withEdge = addEdge(withNode, {
           sourceId: expenseLinkSourceId,
           targetId: newNode.id,
-          label: '지출 흐름'
+          label: '吏異??먮쫫'
         });
         setHistory(replaceGraph(withEdge, applyPrettyMobileLayout(withEdge.present)));
-        setMessage('지출항목 노드를 추가했어요.');
+        setMessage('吏異쒗빆紐??몃뱶瑜?異붽??덉뼱??');
       }
 
       clearComposer();
@@ -543,7 +540,7 @@ function AppBody() {
       const result = await shareGraph(graph);
       setMessage(result);
     } catch {
-      setMessage('공유를 완료하지 못했어요.');
+      setMessage('怨듭쑀瑜??꾨즺?섏? 紐삵뻽?댁슂.');
     }
   };
 
@@ -552,9 +549,9 @@ function AppBody() {
     if (!canvas) return;
     try {
       await exportGraphPng(canvas);
-      setMessage('PNG 저장을 완료했어요.');
+      setMessage('PNG ??μ쓣 ?꾨즺?덉뼱??');
     } catch {
-      setMessage('PNG 저장에 실패했어요.');
+      setMessage('PNG ??μ뿉 ?ㅽ뙣?덉뼱??');
     }
   };
 
@@ -583,20 +580,19 @@ function AppBody() {
                 </div>
                 <div className="top-actions">
                   <button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>
-                    초기화
-                  </button>
+                    珥덇린??                  </button>
                   <button type="button" className="btn btn-weak" onClick={handleShare}>
-                    공유
+                    怨듭쑀
                   </button>
                   <button type="button" className="btn btn-primary" onClick={() => setComposerOpen(true)}>
-                    노드 추가
+                    ?몃뱶 異붽?
                   </button>
                 </div>
               </header>
 
               <section className="summary-card">
-                <strong>월급통장에서 시작되는 내 흐름</strong>
-                <p>계좌 {summary.account}개 · 카드 {summary.card}개 · 지출항목 {summary.expense}개</p>
+                <strong>?붽툒?듭옣?먯꽌 ?쒖옉?섎뒗 ???먮쫫</strong>
+                <p>怨꾩쥖 {summary.account}媛?쨌 移대뱶 {summary.card}媛?쨌 吏異쒗빆紐?{summary.expense}媛?/p>
               </section>
 
               <section className="canvas-wrap" id="flow-canvas">
@@ -633,51 +629,50 @@ function AppBody() {
                 </ReactFlow>
               </section>
 
-              <BottomSheet open={composerOpen} title="노드 추가" onClose={() => setComposerOpen(false)}>
+              <BottomSheet open={composerOpen} title="?몃뱶 異붽?" onClose={() => setComposerOpen(false)}>
                 <div className="sheet-segment">
                   <button
                     type="button"
                     className={composerKind === 'account' ? 'btn btn-primary' : 'btn btn-weak'}
                     onClick={() => setComposerKind('account')}
                   >
-                    계좌
+                    怨꾩쥖
                   </button>
                   <button
                     type="button"
                     className={composerKind === 'card' ? 'btn btn-primary' : 'btn btn-weak'}
                     onClick={() => setComposerKind('card')}
                   >
-                    카드
+                    移대뱶
                   </button>
                   <button
                     type="button"
                     className={composerKind === 'expense' ? 'btn btn-primary' : 'btn btn-weak'}
                     onClick={() => setComposerKind('expense')}
                   >
-                    지출항목
-                  </button>
+                    吏異쒗빆紐?                  </button>
                 </div>
 
                 {composerKind === 'account' && (
                   <div className="sheet-form">
                     <label>
-                      계좌 구분
+                      怨꾩쥖 援щ텇
                       <select value={accountSubtype} onChange={(event) => setAccountSubtype(event.target.value as AccountSubtype)}>
-                        <option value="spending">지출</option>
-                        <option value="saving">적금</option>
-                        <option value="invest">투자</option>
+                        <option value="spending">吏異?/option>
+                        <option value="saving">?곴툑</option>
+                        <option value="invest">?ъ옄</option>
                       </select>
                     </label>
                     <label>
-                      은행 종류
-                      <input value={accountBank} onChange={(event) => setAccountBank(event.target.value)} placeholder="예: 신한은행" maxLength={30} />
+                      ???醫낅쪟
+                      <input value={accountBank} onChange={(event) => setAccountBank(event.target.value)} placeholder="?? ?좏븳??? maxLength={30} />
                     </label>
                     <label>
-                      계좌 용도
-                      <input value={accountPurpose} onChange={(event) => setAccountPurpose(event.target.value)} placeholder="예: 생활비 통장" maxLength={30} />
+                      怨꾩쥖 ?⑸룄
+                      <input value={accountPurpose} onChange={(event) => setAccountPurpose(event.target.value)} placeholder="?? ?앺솢鍮??듭옣" maxLength={30} />
                     </label>
                     <label>
-                      연결될 상위 계좌
+                      ?곌껐???곸쐞 怨꾩쥖
                       <select value={accountLinkSourceId} onChange={(event) => setAccountLinkSourceId(event.target.value)}>
                         {accountLinkCandidates.map((node) => (
                           <option key={node.id} value={node.id}>
@@ -687,7 +682,7 @@ function AppBody() {
                       </select>
                     </label>
                     <label>
-                      기타 메모
+                      湲고? 硫붾え
                       <input value={accountMemo} onChange={(event) => setAccountMemo(event.target.value)} maxLength={40} />
                     </label>
                   </div>
@@ -696,15 +691,15 @@ function AppBody() {
                 {composerKind === 'card' && (
                   <div className="sheet-form">
                     <label>
-                      카드사 종류
-                      <input value={cardIssuer} onChange={(event) => setCardIssuer(event.target.value)} placeholder="예: 삼성카드" maxLength={30} />
+                      移대뱶??醫낅쪟
+                      <input value={cardIssuer} onChange={(event) => setCardIssuer(event.target.value)} placeholder="?? ?쇱꽦移대뱶" maxLength={30} />
                     </label>
                     <label>
-                      카드 용도
-                      <input value={cardPurpose} onChange={(event) => setCardPurpose(event.target.value)} placeholder="예: 생활비 카드" maxLength={30} />
+                      移대뱶 ?⑸룄
+                      <input value={cardPurpose} onChange={(event) => setCardPurpose(event.target.value)} placeholder="?? ?앺솢鍮?移대뱶" maxLength={30} />
                     </label>
                     <label>
-                      연결될 계좌
+                      ?곌껐??怨꾩쥖
                       <select value={cardLinkAccountId} onChange={(event) => setCardLinkAccountId(event.target.value)}>
                         {cardLinkCandidates.map((node) => (
                           <option key={node.id} value={node.id}>
@@ -714,7 +709,7 @@ function AppBody() {
                       </select>
                     </label>
                     <label>
-                      기타 메모
+                      湲고? 硫붾え
                       <input value={cardMemo} onChange={(event) => setCardMemo(event.target.value)} maxLength={40} />
                     </label>
                   </div>
@@ -723,11 +718,11 @@ function AppBody() {
                 {composerKind === 'expense' && (
                   <div className="sheet-form">
                     <label>
-                      지출항목 종류
-                      <input value={expenseType} onChange={(event) => setExpenseType(event.target.value)} placeholder="예: 주유비" maxLength={30} />
+                      吏異쒗빆紐?醫낅쪟
+                      <input value={expenseType} onChange={(event) => setExpenseType(event.target.value)} placeholder="?? 二쇱쑀鍮? maxLength={30} />
                     </label>
                     <label>
-                      연결될 계좌 또는 카드
+                      ?곌껐??怨꾩쥖 ?먮뒗 移대뱶
                       <select value={expenseLinkSourceId} onChange={(event) => setExpenseLinkSourceId(event.target.value)}>
                         {expenseLinkCandidates.map((node) => (
                           <option key={node.id} value={node.id}>
@@ -737,7 +732,7 @@ function AppBody() {
                       </select>
                     </label>
                     <label>
-                      기타 메모
+                      湲고? 硫붾え
                       <input value={expenseMemo} onChange={(event) => setExpenseMemo(event.target.value)} maxLength={40} />
                     </label>
                   </div>
@@ -745,7 +740,7 @@ function AppBody() {
 
                 <div className="sheet-inline-buttons">
                   <button type="button" className="btn btn-primary" onClick={handleAddByComposer}>
-                    추가하기
+                    異붽??섍린
                   </button>
                   <button
                     type="button"
@@ -754,20 +749,20 @@ function AppBody() {
                       if (!history) return;
                       const next = replaceGraph(history, applyPrettyMobileLayout(history.present));
                       setHistory(next);
-                      setMessage('노드를 예쁘게 다시 정렬했어요.');
+                      setMessage('?몃뱶瑜??덉걯寃??ㅼ떆 ?뺣젹?덉뼱??');
                     }}
                   >
-                    다시 정렬
+                    ?ㅼ떆 ?뺣젹
                   </button>
                 </div>
               </BottomSheet>
 
-              <BottomSheet open={detailOpen && selection.kind !== 'none'} title="상세 정보" onClose={() => setDetailOpen(false)}>
+              <BottomSheet open={detailOpen && selection.kind !== 'none'} title="?곸꽭 ?뺣낫" onClose={() => setDetailOpen(false)}>
                 {selection.kind === 'node' && (
                   <div className="sheet-form">
-                    <p>노드 타입: {NODE_TYPE_LABEL[selection.value.type]}</p>
+                    <p>?몃뱶 ??? {NODE_TYPE_LABEL[selection.value.type]}</p>
                     <label>
-                      이름
+                      ?대쫫
                       <input
                         value={selection.value.name}
                         onChange={(event) =>
@@ -778,7 +773,7 @@ function AppBody() {
                       />
                     </label>
                     <label>
-                      메모
+                      硫붾え
                       <input
                         value={selection.value.meta?.note ?? ''}
                         onChange={(event) =>
@@ -802,22 +797,21 @@ function AppBody() {
                               meta: selection.value.meta
                             });
                             setHistory(replaceGraph(next, applyPrettyMobileLayout(next.present)));
-                            setMessage('노드 정보를 저장했어요.');
+                            setMessage('?몃뱶 ?뺣낫瑜???ν뻽?댁슂.');
                             setDetailOpen(false);
                           } catch (error) {
                             setMessage((error as Error).message);
                           }
                         }}
                       >
-                        저장
-                      </button>
+                        ???                      </button>
                       <button
                         type="button"
                         className="btn btn-danger"
                         onClick={() => {
                           if (selection.kind !== 'node') return;
                           if (selection.value.type === 'salary_account') {
-                            setMessage('월급통장은 삭제할 수 없어요.');
+                            setMessage('?붽툒?듭옣? ??젣?????놁뼱??');
                             return;
                           }
                           const next = removeNode(history, selection.value.id);
@@ -826,7 +820,7 @@ function AppBody() {
                           setDetailOpen(false);
                         }}
                       >
-                        삭제
+                        ??젣
                       </button>
                     </div>
                   </div>
@@ -834,9 +828,9 @@ function AppBody() {
 
                 {selection.kind === 'edge' && (
                   <div className="sheet-form">
-                    <p>연결 타입: {EDGE_TYPE_LABEL[selection.value.type]}</p>
+                    <p>?곌껐 ??? {EDGE_TYPE_LABEL[selection.value.type]}</p>
                     <label>
-                      라벨
+                      ?쇰꺼
                       <input
                         value={selection.value.label ?? ''}
                         onChange={(event) =>
@@ -847,7 +841,7 @@ function AppBody() {
                       />
                     </label>
                     <label>
-                      메모
+                      硫붾え
                       <input
                         value={selection.value.memo ?? ''}
                         onChange={(event) =>
@@ -869,15 +863,14 @@ function AppBody() {
                               memo: selection.value.memo
                             });
                             setHistory(next);
-                            setMessage('연결 정보를 저장했어요.');
+                            setMessage('?곌껐 ?뺣낫瑜???ν뻽?댁슂.');
                             setDetailOpen(false);
                           } catch (error) {
                             setMessage((error as Error).message);
                           }
                         }}
                       >
-                        저장
-                      </button>
+                        ???                      </button>
                       <button
                         type="button"
                         className="btn btn-danger"
@@ -889,20 +882,19 @@ function AppBody() {
                           setDetailOpen(false);
                         }}
                       >
-                        삭제
+                        ??젣
                       </button>
                     </div>
                   </div>
                 )}
 
                 <button type="button" className="btn btn-weak" onClick={handleExport}>
-                  PNG 저장
-                </button>
+                  PNG ???                </button>
               </BottomSheet>
 
-              <BottomSheet open={resetConfirmOpen} title="노드 초기화" onClose={() => setResetConfirmOpen(false)}>
+              <BottomSheet open={resetConfirmOpen} title="?몃뱶 珥덇린?? onClose={() => setResetConfirmOpen(false)}>
                 <div className="sheet-form">
-                  <p>데이터가 모두 삭제됩니다.</p>
+                  <p>?곗씠?곌? 紐⑤몢 ??젣?⑸땲??</p>
                   <div className="sheet-inline-buttons">
                     <button
                       type="button"
@@ -914,13 +906,12 @@ function AppBody() {
                         setComposerOpen(false);
                         setDetailOpen(false);
                         setResetConfirmOpen(false);
-                        setMessage('초기화가 완료됐어요.');
+                        setMessage('珥덇린?붽? ?꾨즺?먯뼱??');
                       }}
                     >
-                      전체 초기화
-                    </button>
+                      ?꾩껜 珥덇린??                    </button>
                     <button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(false)}>
-                      취소
+                      痍⑥냼
                     </button>
                   </div>
                 </div>
@@ -946,3 +937,4 @@ export function App() {
     </ReactFlowProvider>
   );
 }
+
