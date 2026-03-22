@@ -20,7 +20,7 @@ interface FlowNodeData {
 
 type Selection = { kind: 'node'; value: FlowNode } | { kind: 'none' };
 type ComposerKind = 'account' | 'card' | 'expense' | 'salary';
-type AccountSubtype = 'spending' | 'invest' | 'saving' | 'pension';
+type AccountSubtype = 'spending' | 'invest' | 'saving_spend' | 'saving_reserve' | 'pension';
 
 const CANVAS_WIDTH = 356;
 const CANVAS_HEIGHT = 560;
@@ -42,10 +42,33 @@ const THEMES: Record<ThemeName, { className: string }> = {
 
 function nodeClass(type: NodeType, subtype?: string): string {
   if (type === 'salary_account') return 'node-shape node-salary';
-  if (type === 'asset_account') return `node-shape node-account ${subtype ? `node-account-${subtype}` : 'node-account-spending'}`;
+  if (type === 'asset_account') {
+    const subtypeClass =
+      subtype === 'invest' ? 'node-account-invest'
+        : subtype === 'pension' ? 'node-account-pension'
+          : subtype === 'saving_spend' ? 'node-account-saving-spend'
+            : subtype === 'saving_reserve' || subtype === 'saving' ? 'node-account-saving-reserve'
+              : 'node-account-spending';
+    return `node-shape node-account ${subtypeClass}`;
+  }
   if (type === 'payment_instrument') return 'node-shape node-card';
   if (type === 'expense_category') return 'node-shape node-expense';
   return 'node-shape node-rounded';
+}
+
+function normalizeAccountSubtype(value?: string): AccountSubtype {
+  if (value === 'saving') return 'saving_reserve';
+  if (value === 'saving_spend') return 'saving_spend';
+  if (value === 'saving_reserve') return 'saving_reserve';
+  if (value === 'invest') return 'invest';
+  if (value === 'pension') return 'pension';
+  return 'spending';
+}
+
+function isUpperAsset(node: FlowNode): boolean {
+  if (node.type !== 'asset_account') return false;
+  const subtype = normalizeAccountSubtype(node.meta?.subtype as string | undefined);
+  return subtype === 'invest' || subtype === 'pension' || subtype === 'saving_reserve';
 }
 
 function FlowShapeNode(props: NodeProps<FlowNodeData>) {
@@ -62,9 +85,11 @@ function FlowShapeNode(props: NodeProps<FlowNodeData>) {
             <small>{institution}</small>
           </div>
         )}
-        {type !== 'salary_account' && <Handle type="target" position={Position.Top} />}
+        {type !== 'salary_account' && <Handle id="target-top" type="target" position={Position.Top} />}
+        {type !== 'salary_account' && <Handle id="target-bottom" type="target" position={Position.Bottom} />}
+        {type === 'salary_account' && <Handle id="source-top" type="source" position={Position.Top} />}
         <span className="node-main-label">{mainText}</span>
-        {type !== 'expense_category' && <Handle type="source" position={Position.Bottom} />}
+        {type !== 'expense_category' && <Handle id="source-bottom" type="source" position={Position.Bottom} />}
       </div>
     </div>
   );
@@ -93,13 +118,15 @@ function starterGraph(): FlowGraph {
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
   const rowBand = CANVAS_HEIGHT / 4;
-  const rowTopInset = 18;
+  const fiveBand = rowBand * 0.8;
+  const rowTopInset = 10;
   const rowY: Record<string, number> = {
-    salary_account: Math.round(rowBand * 0 + rowTopInset),
-    asset_account: Math.round(rowBand * 1 + rowTopInset),
-    payment_instrument: Math.round(rowBand * 2 + rowTopInset),
-    expense_category: Math.round(rowBand * 3 + rowTopInset),
-    other: Math.round(rowBand * 3 + rowTopInset)
+    asset_upper: Math.round(fiveBand * 0 + rowTopInset),
+    salary_account: Math.round(fiveBand * 1 + rowTopInset),
+    asset_account: Math.round(fiveBand * 2 + rowTopInset),
+    payment_instrument: Math.round(fiveBand * 3 + rowTopInset),
+    expense_category: Math.round(fiveBand * 4 + rowTopInset),
+    other: Math.round(fiveBand * 4 + rowTopInset)
   };
 
   const incoming = new Map<string, string[]>();
@@ -113,13 +140,13 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
 
   const toRowKey = (node: FlowNode): string => {
     if (node.type === 'salary_account') return 'salary_account';
-    if (node.type === 'asset_account') return 'asset_account';
+    if (node.type === 'asset_account') return isUpperAsset(node) ? 'asset_upper' : 'asset_account';
     if (node.type === 'payment_instrument') return 'payment_instrument';
     if (node.type === 'expense_category') return 'expense_category';
     return 'other';
   };
 
-  const rowKeys: string[] = ['salary_account', 'asset_account', 'payment_instrument', 'expense_category', 'other'];
+  const rowKeys: string[] = ['asset_upper', 'salary_account', 'asset_account', 'payment_instrument', 'expense_category', 'other'];
   const byRow = new Map<string, FlowNode[]>();
   for (const key of rowKeys) byRow.set(key, []);
   for (const node of graph.nodes) byRow.get(toRowKey(node))?.push(node);
@@ -288,6 +315,27 @@ function AppBody() {
 
   const accountLinks = useMemo(() => graph?.nodes.filter((n) => n.type === 'salary_account' || n.type === 'asset_account') ?? [], [graph]);
   const expenseLinks = useMemo(() => graph?.nodes.filter((n) => n.type === 'salary_account' || n.type === 'asset_account' || n.type === 'payment_instrument') ?? [], [graph]);
+  const highlighted = useMemo(() => {
+    if (!graph || selection.kind !== 'node') return null;
+    const activeEdges = graph.edges.filter((e) => e.active);
+    const relatedNodes = new Set<string>([selection.value.id]);
+    const relatedEdges = new Set<string>();
+    const queue: string[] = [selection.value.id];
+    while (queue.length) {
+      const current = queue.shift() as string;
+      for (const edge of activeEdges) {
+        const linked = edge.sourceId === current || edge.targetId === current;
+        if (!linked) continue;
+        relatedEdges.add(edge.id);
+        const nextId = edge.sourceId === current ? edge.targetId : edge.sourceId;
+        if (!relatedNodes.has(nextId)) {
+          relatedNodes.add(nextId);
+          queue.push(nextId);
+        }
+      }
+    }
+    return { relatedNodes, relatedEdges };
+  }, [graph, selection]);
   const expenseSourceLabel = (n: FlowNode): string => {
     const purpose = n.meta?.purpose ?? n.name;
     if (n.type === 'asset_account') return `${purpose} (계좌 / ${n.meta?.institution ?? '은행'})`;
@@ -302,6 +350,7 @@ function AppBody() {
     type: 'flowShape',
     sourcePosition: Position.Bottom,
     targetPosition: Position.Top,
+    style: highlighted && !highlighted.relatedNodes.has(n.id) ? { opacity: 0.2 } : undefined,
     data: {
       label: n.name,
       type: n.type,
@@ -312,15 +361,21 @@ function AppBody() {
       typeTag: n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : undefined,
       subtype: n.meta?.subtype
     }
-  })), [graph]);
+  })), [graph, highlighted]);
 
   const rfEdges = useMemo<Edge[]>(() => (graph?.edges ?? []).map((e) => {
+    const sourceNode = (graph?.nodes ?? []).find((node) => node.id === e.sourceId);
     const targetType = (graph?.nodes ?? []).find((node) => node.id === e.targetId)?.type;
+    const targetNode = (graph?.nodes ?? []).find((node) => node.id === e.targetId);
     const toExpense = targetType === 'expense_category';
+    const sourceTop = sourceNode?.type === 'salary_account' && !!targetNode && isUpperAsset(targetNode);
+    const dimmed = !!highlighted && !highlighted.relatedEdges.has(e.id);
     return ({
     id: e.id,
     source: e.sourceId,
     target: e.targetId,
+    sourceHandle: sourceTop ? 'source-top' : 'source-bottom',
+    targetHandle: sourceTop ? 'target-bottom' : 'target-top',
     type: 'default',
     markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: e.active ? '#2f6f9f' : '#8fa9be' },
     style: e.active
@@ -329,10 +384,11 @@ function AppBody() {
           stroke: '#2f6f9f',
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
-          strokeDasharray: toExpense ? '6 5' : undefined
+          strokeDasharray: toExpense ? '6 5' : undefined,
+          opacity: dimmed ? 0.16 : 1
         }
       : {
-          opacity: 0.35,
+          opacity: dimmed ? 0.12 : 0.35,
           strokeWidth: 1.8,
           stroke: '#8fa9be',
           strokeLinecap: 'round',
@@ -341,7 +397,7 @@ function AppBody() {
         },
     animated: false
   });
-  }), [graph]);
+  }), [graph, highlighted]);
 
   if (!history) return <main className="app-stage"><section className="mobile-frame"><section className="app-shell theme-calm-mint" /></section></main>;
 
@@ -390,7 +446,7 @@ function AppBody() {
     if (node.type === 'asset_account') {
       setDetailKind('account');
       setDetailNodeId(node.id);
-      setDetailAccountSubtype((node.meta?.subtype as AccountSubtype) ?? 'spending');
+      setDetailAccountSubtype(normalizeAccountSubtype(node.meta?.subtype as string | undefined));
       setDetailAccountBank(node.meta?.institution ?? '');
       setDetailAccountPurpose(node.meta?.purpose ?? node.name);
       setDetailAccountLinkSourceId(incomingEdge?.sourceId ?? '');
@@ -579,7 +635,7 @@ function AppBody() {
 
               <BottomSheet open={composerOpen} title="노드 추가" onClose={() => setComposerOpen(false)} align="center">
                 <div className="sheet-segment"><button type="button" className={kind === 'account' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('account')}>계좌</button><button type="button" className={kind === 'card' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('card')}>카드</button><button type="button" className={kind === 'expense' ? 'btn btn-primary' : 'btn btn-weak'} onClick={() => setKind('expense')}>지출항목</button></div>
-                {kind === 'account' && <div className="sheet-form"><label>계좌 구분 *<select required value={accountSubtype} onChange={(e) => setAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving">적금</option><option value="pension">연금</option></select></label><label>은행명 *<input required value={accountBank} onChange={(e) => setAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도 *<input required value={accountPurpose} onChange={(e) => setAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌 *<select required value={accountLinkSourceId} onChange={(e) => setAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={accountMemo} onChange={(e) => setAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {kind === 'account' && <div className="sheet-form"><label>계좌 구분 *<select required value={accountSubtype} onChange={(e) => setAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving_spend">적금(지출용)</option><option value="saving_reserve">적금(저축용)</option><option value="pension">연금</option></select></label><label>은행명 *<input required value={accountBank} onChange={(e) => setAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도 *<input required value={accountPurpose} onChange={(e) => setAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌 *<select required value={accountLinkSourceId} onChange={(e) => setAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={accountMemo} onChange={(e) => setAccountMemo(e.target.value)} maxLength={40} /></label></div>}
                 {kind === 'card' && <div className="sheet-form"><label>카드명 *<input required value={cardIssuer} onChange={(e) => setCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도 *<input required value={cardPurpose} onChange={(e) => setCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌 *<select required value={cardLinkAccountId} onChange={(e) => setCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={cardMemo} onChange={(e) => setCardMemo(e.target.value)} maxLength={40} /></label></div>}
                 {kind === 'expense' && <div className="sheet-form"><label>지출항목 종류 *<input required value={expenseType} onChange={(e) => setExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드 *<select required value={expenseLinkSourceId} onChange={(e) => setExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{expenseSourceLabel(n)}</option>)}</select></label><label>기타 메모<input value={expenseMemo} onChange={(e) => setExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={addByComposer}>추가하기</button><button type="button" className="btn btn-weak" onClick={() => { const next = replaceGraph(history, prettyLayout(history.present)); setHistory(next); setMessage('노드를 다시 정렬했어요.'); }}>다시 정렬</button></div>
@@ -587,7 +643,7 @@ function AppBody() {
 
               <BottomSheet open={detailOpen && selection.kind !== 'none'} title="노드 상세 수정" onClose={() => setDetailOpen(false)} align="center">
                 {detailKind === 'salary' && <div className="sheet-form"><label>은행명<input value={detailSalaryBank} onChange={(e) => setDetailSalaryBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value="월급통장" readOnly /></label></div>}
-                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving">적금</option><option value="pension">연금</option></select></label><label>은행명<input value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
+                {detailKind === 'account' && <div className="sheet-form"><label>계좌 구분<select value={detailAccountSubtype} onChange={(e) => setDetailAccountSubtype(e.target.value as AccountSubtype)}><option value="spending">지출</option><option value="invest">투자</option><option value="saving_spend">적금(지출용)</option><option value="saving_reserve">적금(저축용)</option><option value="pension">연금</option></select></label><label>은행명<input value={detailAccountBank} onChange={(e) => setDetailAccountBank(e.target.value)} maxLength={30} /></label><label>계좌 용도<input value={detailAccountPurpose} onChange={(e) => setDetailAccountPurpose(e.target.value)} maxLength={30} /></label><label>연결될 상위 계좌<select value={detailAccountLinkSourceId} onChange={(e) => setDetailAccountLinkSourceId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailAccountMemo} onChange={(e) => setDetailAccountMemo(e.target.value)} maxLength={40} /></label></div>}
                 {detailKind === 'card' && <div className="sheet-form"><label>카드명<input value={detailCardIssuer} onChange={(e) => setDetailCardIssuer(e.target.value)} maxLength={30} /></label><label>카드 용도<input value={detailCardPurpose} onChange={(e) => setDetailCardPurpose(e.target.value)} maxLength={30} /></label><label>연결될 계좌<select value={detailCardLinkAccountId} onChange={(e) => setDetailCardLinkAccountId(e.target.value)}><option value="">선택하세요</option>{accountLinks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>기타 메모<input value={detailCardMemo} onChange={(e) => setDetailCardMemo(e.target.value)} maxLength={40} /></label></div>}
                 {detailKind === 'expense' && <div className="sheet-form"><label>지출항목 종류<input value={detailExpenseType} onChange={(e) => setDetailExpenseType(e.target.value)} maxLength={30} /></label><label>연결될 계좌 또는 카드<select value={detailExpenseLinkSourceId} onChange={(e) => setDetailExpenseLinkSourceId(e.target.value)}><option value="">선택하세요</option>{expenseLinks.map((n) => <option key={n.id} value={n.id}>{expenseSourceLabel(n)}</option>)}</select></label><label>기타 메모<input value={detailExpenseMemo} onChange={(e) => setDetailExpenseMemo(e.target.value)} maxLength={40} /></label></div>}
                 <div className="sheet-inline-buttons"><button type="button" className="btn btn-primary" onClick={saveDetailNode}>저장</button><button type="button" className="btn btn-danger" onClick={() => { if (!detailNodeId) return; const target = history.present.nodes.find((n) => n.id === detailNodeId); if (!target) return; if (target.type === 'salary_account') return setMessage('월급통장은 삭제할 수 없어요.'); const next = removeNode(history, detailNodeId); setHistory(replaceGraph(next, prettyLayout(next.present))); setSelection({ kind: 'none' }); setDetailOpen(false); }}>삭제</button></div>

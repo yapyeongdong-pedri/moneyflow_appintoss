@@ -512,9 +512,14 @@ select {
   border-color: #9de2ff;
 }
 
-.node-account-saving {
+.node-account-saving-spend {
   border-color: #9ef3cb;
   background: linear-gradient(135deg, #31b98a 0%, #228d6d 56%, #1a6f5d 100%);
+}
+
+.node-account-saving-reserve {
+  border-color: #b7f0cf;
+  background: linear-gradient(135deg, #2ba57f 0%, #207b63 56%, #16584b 100%);
 }
 
 .node-account-invest {
@@ -612,6 +617,7 @@ select {
 .node-salary .node-main-label {
   font-size: 14px;
   line-height: 1;
+  margin-top: 2px;
 }
 
 .node-expense .node-main-label {
