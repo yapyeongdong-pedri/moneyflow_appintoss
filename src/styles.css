@@ -83,10 +83,10 @@ body {
 
 .intro-screen {
   height: 100%;
-  padding: 24px 16px 140px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  padding: 24px 16px 16px;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: 12px;
   position: relative;
   background: linear-gradient(180deg, #cce8e4 0%, #c3e2de 100%);
 }
@@ -126,12 +126,15 @@ body {
 }
 
 .intro-cards {
+  min-height: 0;
   display: grid;
-  gap: 14px;
-  margin-top: 8px;
-  padding-top: 14px;
+  gap: 12px;
+  margin-top: 2px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.7);
   z-index: 1;
+  overflow-y: auto;
+  align-content: start;
 }
 
 .intro-card {
@@ -159,15 +162,15 @@ body {
 }
 
 .intro-cta {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: calc(20px + env(safe-area-inset-bottom));
+  position: static;
+  width: 100%;
+  margin-top: 6px;
   height: 64px;
   border-radius: 18px;
   font-size: 36px;
   font-weight: 800;
   z-index: 2;
+  margin-bottom: calc(6px + env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -470,6 +473,11 @@ select {
 .node-account-invest {
   border-color: #ffd7a4;
   background: linear-gradient(135deg, #d2943e 0%, #ad7224 56%, #8a5619 100%);
+}
+
+.node-account-pension {
+  border-color: #d9c7ff;
+  background: linear-gradient(135deg, #8d6fd3 0%, #6f53ba 56%, #523f99 100%);
 }
 
 .node-card {
