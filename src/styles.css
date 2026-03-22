@@ -450,7 +450,7 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px;
+  padding: 2px;
 }
 
 .node-shape {
@@ -458,15 +458,15 @@ select {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  width: 116px;
-  min-height: 72px;
-  padding: 10px 12px;
-  font-size: 12px;
+  width: 64px;
+  min-height: 42px;
+  padding: 5px 6px;
+  font-size: 9px;
   text-align: left;
   color: #fff;
   background: var(--accent);
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 12px 22px rgba(17, 24, 39, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 14px rgba(17, 24, 39, 0.2);
   transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
   overflow: hidden;
 }
@@ -478,8 +478,8 @@ select {
 }
 
 .node-salary {
-  width: 122px;
-  min-height: 72px;
+  width: 64px;
+  min-height: 42px;
   border-radius: 8px;
   background: linear-gradient(135deg, #0f7f95, #1653ab);
   align-items: center;
@@ -487,9 +487,9 @@ select {
 }
 
 .node-account {
-  width: 128px;
-  min-height: 86px;
-  border-radius: 16px;
+  width: 66px;
+  min-height: 50px;
+  border-radius: 10px;
   clip-path: polygon(11% 0, 89% 0, 100% 50%, 89% 100%, 11% 100%, 0 50%);
   background: linear-gradient(135deg, #35addf 0%, #288ec5 52%, #1f6aa8 100%);
 }
@@ -497,11 +497,11 @@ select {
 .node-account::before {
   content: "";
   position: absolute;
-  left: 14px;
-  top: 12px;
-  right: 14px;
-  bottom: 10px;
-  border-radius: 10px;
+  left: 8px;
+  top: 6px;
+  right: 8px;
+  bottom: 6px;
+  border-radius: 6px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
     linear-gradient(160deg, rgba(0, 0, 0, 0.07), rgba(0, 0, 0, 0.01));
@@ -528,21 +528,21 @@ select {
 }
 
 .node-card {
-  width: 122px;
-  min-height: 84px;
-  border-radius: 14px;
+  width: 66px;
+  min-height: 48px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #4f89eb, #2f60cf);
 }
 
 .node-rounded {
-  width: 110px;
-  border-radius: 14px;
+  width: 64px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #6b7e93, #4d5f73);
 }
 
 .node-expense {
-  width: 122px;
-  min-height: 76px;
+  width: 64px;
+  min-height: 42px;
   border-radius: 999px;
   background: linear-gradient(135deg, #a95fd7, #7d3fb2);
   align-items: center;
@@ -550,36 +550,36 @@ select {
 
 .node-main-label {
   width: 100%;
-  font-size: 15px;
-  line-height: 1.14;
+  font-size: 10px;
+  line-height: 1.1;
   font-weight: 800;
   text-align: left;
   letter-spacing: -0.01em;
-  padding-left: 2px;
-  padding-bottom: 2px;
+  padding-left: 1px;
+  padding-bottom: 1px;
 }
 
 .node-account .node-main-label,
 .node-card .node-main-label {
-  margin-top: 22px;
-  font-size: 22px;
-  line-height: 1.05;
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1;
 }
 
 .node-meta-inline {
   position: absolute;
-  left: 12px;
-  top: 10px;
+  left: 6px;
+  top: 5px;
   display: flex;
   align-items: center;
   gap: 0;
-  max-width: calc(100% - 64px);
+  max-width: calc(100% - 30px);
   text-align: left;
   z-index: 2;
 }
 
 .node-meta-inline small {
-  font-size: 11px;
+  font-size: 8px;
   font-weight: 700;
   opacity: 0.96;
   white-space: nowrap;
@@ -589,13 +589,13 @@ select {
 
 .node-type-tag {
   position: absolute;
-  top: 8px;
-  right: 10px;
-  font-size: 10px;
+  top: 4px;
+  right: 5px;
+  font-size: 7px;
   font-weight: 800;
   line-height: 1;
   border-radius: 999px;
-  padding: 4px 7px;
+  padding: 2px 4px;
   background: rgba(255, 255, 255, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.48);
   z-index: 2;
@@ -610,17 +610,17 @@ select {
 }
 
 .node-salary .node-main-label {
-  font-size: 22px;
-  line-height: 1.05;
+  font-size: 14px;
+  line-height: 1;
 }
 
 .node-expense .node-main-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 3.2em;
+  max-width: 4.2em;
   margin: 0 auto;
-  font-size: 21px;
+  font-size: 12px;
 }
 
 .scroll-top-chip {

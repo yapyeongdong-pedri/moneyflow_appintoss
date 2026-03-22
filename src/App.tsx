@@ -23,9 +23,9 @@ type ComposerKind = 'account' | 'card' | 'expense';
 type AccountSubtype = 'spending' | 'invest' | 'saving' | 'pension';
 
 const CANVAS_WIDTH = 356;
-const CANVAS_HEIGHT = 920;
-const NODE_BOX_WIDTH = 128;
-const NODE_SIDE_GUTTER = 12;
+const CANVAS_HEIGHT = 560;
+const NODE_BOX_WIDTH = 66;
+const NODE_SIDE_GUTTER = 8;
 const MAX_ROW_NODES = 5;
 const FLOW_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
 const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH, CANVAS_HEIGHT]];
@@ -91,14 +91,13 @@ function starterGraph(): FlowGraph {
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
   const rowBand = CANVAS_HEIGHT / 4;
-  const bandInsetTop = 16;
-  const rowLineGap = 66;
-  const rowY: Record<string, number[]> = {
-    salary_account: [Math.round(rowBand * 0 + bandInsetTop)],
-    asset_account: [Math.round(rowBand * 1 + bandInsetTop), Math.round(rowBand * 1 + bandInsetTop + rowLineGap), Math.round(rowBand * 1 + bandInsetTop + rowLineGap * 2)],
-    payment_instrument: [Math.round(rowBand * 2 + bandInsetTop), Math.round(rowBand * 2 + bandInsetTop + rowLineGap), Math.round(rowBand * 2 + bandInsetTop + rowLineGap * 2)],
-    expense_category: [Math.round(rowBand * 3 + bandInsetTop), Math.round(rowBand * 3 + bandInsetTop + rowLineGap), Math.round(rowBand * 3 + bandInsetTop + rowLineGap * 2)],
-    other: [Math.round(rowBand * 3 + bandInsetTop), Math.round(rowBand * 3 + bandInsetTop + rowLineGap), Math.round(rowBand * 3 + bandInsetTop + rowLineGap * 2)]
+  const rowTopInset = 18;
+  const rowY: Record<string, number> = {
+    salary_account: Math.round(rowBand * 0 + rowTopInset),
+    asset_account: Math.round(rowBand * 1 + rowTopInset),
+    payment_instrument: Math.round(rowBand * 2 + rowTopInset),
+    expense_category: Math.round(rowBand * 3 + rowTopInset),
+    other: Math.round(rowBand * 3 + rowTopInset)
   };
 
   const incoming = new Map<string, string[]>();
@@ -130,22 +129,15 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
     return Array.from({ length: count }, (_, idx) => Math.round(minX + (idx * (maxX - minX)) / Math.max(count - 1, 1)));
   };
 
-  const positionRow = (rowKey: string, nodes: FlowNode[], yList: number[]) => {
+  const positionRow = (rowKey: string, nodes: FlowNode[], yPos: number) => {
     if (!nodes.length) return;
-    const maxPerLine = rowKey === 'salary_account' ? 1 : 2;
-    const rowNodes = nodes.slice(0, MAX_ROW_NODES);
-    const lines = Math.ceil(rowNodes.length / maxPerLine);
-
-    for (let line = 0; line < lines; line += 1) {
-      const lineNodes = rowNodes.slice(line * maxPerLine, (line + 1) * maxPerLine);
-      const xs = slotX(lineNodes.length);
-      const yPos = yList[Math.min(line, yList.length - 1)];
-      lineNodes.forEach((node, index) => {
-        const x = rowKey === 'salary_account' ? SALARY_X : xs[index];
-        xById.set(node.id, x);
-        node.ui = { ...node.ui, x, y: yPos };
-      });
-    }
+    const rowNodes = rowKey === 'salary_account' ? nodes.slice(0, 1) : nodes.slice(0, MAX_ROW_NODES);
+    const xs = slotX(rowNodes.length);
+    rowNodes.forEach((node, index) => {
+      const x = rowKey === 'salary_account' ? SALARY_X : xs[index];
+      xById.set(node.id, x);
+      node.ui = { ...node.ui, x, y: yPos };
+    });
   };
 
   for (const row of rowKeys) {
