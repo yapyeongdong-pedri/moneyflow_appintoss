@@ -42,7 +42,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(138px + env(safe-area-inset-bottom));
+  padding-bottom: calc(124px + env(safe-area-inset-bottom));
   background: radial-gradient(circle at 20% -20%, var(--bg-soft), transparent 55%), var(--bg-main);
   color: var(--text-primary);
 }
@@ -98,7 +98,7 @@ body {
 
 .intro-screen h1 {
   margin: 0;
-  font-size: 26px;
+  font-size: 25px;
   line-height: 1.24;
 }
 
@@ -170,13 +170,14 @@ body {
 .summary-card {
   margin: 10px 10px 0;
   border-radius: 14px;
-  background: var(--panel);
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.09);
+  background: linear-gradient(135deg, #ffffff, #f6fbff);
+  border: 1px solid #dde8f2;
+  box-shadow: 0 12px 26px rgba(17, 24, 39, 0.1);
   padding: 10px 12px;
 }
 
 .summary-card strong {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .summary-card p {
@@ -190,38 +191,13 @@ body {
   margin: 10px 10px 0;
   border-radius: 18px;
   overflow: hidden;
-  background: var(--panel);
-  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.1);
-  min-height: calc(100% - 270px);
-}
-
-.legend {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  z-index: 8;
-  font-size: 11px;
-  border-radius: 10px;
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.legend ul {
-  margin: 4px 0 0;
-  padding-left: 14px;
-}
-
-.fab-dock {
-  position: fixed;
-  width: min(calc(100% - 32px), 354px);
-  bottom: calc(110px + env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 18;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  background:
+    radial-gradient(circle at 12% 8%, #ecf6ff 0%, transparent 35%),
+    radial-gradient(circle at 90% 80%, #eaf8f4 0%, transparent 32%),
+    linear-gradient(180deg, #ffffff, #f5f9ff);
+  border: 1px solid #dbe6f1;
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
+  min-height: calc(100% - 220px);
 }
 
 .btn {
@@ -267,7 +243,7 @@ body {
   margin: 0 auto;
   border-radius: 18px 18px 0 0;
   background: #fff;
-  max-height: min(74dvh, 640px);
+  max-height: min(74dvh, 680px);
   display: flex;
   flex-direction: column;
 }
@@ -283,12 +259,21 @@ body {
 .sheet-body {
   overflow: auto;
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .sheet-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.sheet-segment {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .sheet-inline-buttons {
@@ -313,33 +298,11 @@ select {
   font-size: 16px;
 }
 
-.switch-row {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.confirm-box {
-  border: 1px solid #f3c2c2;
-  border-radius: 10px;
-  background: #fff4f4;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.muted {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
 .toast {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(176px + env(safe-area-inset-bottom));
+  bottom: calc(164px + env(safe-area-inset-bottom));
   z-index: 35;
   font-size: 13px;
   color: #fff;
@@ -362,7 +325,7 @@ select {
 
 .banner-placeholder {
   width: 100%;
-  height: 78px;
+  height: 76px;
   border-radius: 10px;
   border: 1px dashed #b8c2ce;
   background: linear-gradient(90deg, #f2f6fc, #eef4ff);
@@ -372,37 +335,104 @@ select {
   place-items: center;
 }
 
+.node-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.node-top-label {
+  font-size: 10px;
+  line-height: 1.1;
+  color: #2e5570;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #ccdeee;
+  border-radius: 999px;
+  padding: 3px 9px;
+  max-width: 136px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 10px rgba(17, 24, 39, 0.08);
+}
+
 .node-shape {
+  position: relative;
   display: grid;
   place-items: center;
-  min-width: 86px;
+  width: 116px;
   min-height: 54px;
-  padding: 8px;
+  padding: 6px 8px;
   font-size: 12px;
   text-align: center;
   color: #fff;
   background: var(--accent);
-  border: 2px solid rgba(255, 255, 255, 0.48);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 22px rgba(17, 24, 39, 0.2);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
-.node-circle {
+.react-flow__node.selected .node-shape {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 16px 26px rgba(17, 24, 39, 0.24);
+  filter: saturate(1.12);
+}
+
+.node-salary {
+  width: 132px;
   border-radius: 999px;
+  background: linear-gradient(135deg, #0f7f95, #1653ab);
+}
+
+.node-account {
+  width: 122px;
+  border-radius: 16px;
+  clip-path: polygon(16% 0, 84% 0, 100% 50%, 84% 100%, 16% 100%, 0 50%);
+}
+
+.node-account-spending {
+  border-color: #6fd8ff;
+  background: linear-gradient(135deg, #2a9cc6, #1f6ea6);
+}
+
+.node-account-saving {
+  border-color: #7df2be;
+  background: linear-gradient(135deg, #26a977, #1d7e62);
+}
+
+.node-account-invest {
+  border-color: #ffd18e;
+  background: linear-gradient(135deg, #c8872f, #985d17);
+}
+
+.node-card {
+  width: 122px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4d76e0, #2b4fbd);
 }
 
 .node-rounded {
-  border-radius: 18px;
+  width: 110px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6b7e93, #4d5f73);
 }
 
-.node-diamond {
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+.node-expense {
+  width: 68px;
+  min-height: 68px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a95fd7, #7d3fb2);
 }
 
-.node-hexagon {
-  clip-path: polygon(20% 0, 80% 0, 100% 50%, 80% 100%, 20% 100%, 0 50%);
+.react-flow__edge-text {
+  font-size: 10px;
+  fill: #24577e;
+  font-weight: 700;
 }
 
-.node-octagon {
-  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+.react-flow__edge-textbg {
+  fill: rgba(255, 255, 255, 0.92);
 }
 
 @media (max-width: 430px) {
@@ -416,10 +446,6 @@ select {
     border-radius: 0;
     border: none;
     box-shadow: none;
-  }
-
-  .fab-dock {
-    width: calc(100% - 20px);
   }
 
   .bottom-ad {

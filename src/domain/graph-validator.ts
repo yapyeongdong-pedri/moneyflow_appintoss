@@ -3,10 +3,16 @@ import { EdgeType, FlowEdge, FlowGraph, FlowNode, NodeType } from './graph-model
 type AllowedMatrix = Record<NodeType, Partial<Record<NodeType, EdgeType>>>;
 
 export const ALLOWED_EDGE_MATRIX: AllowedMatrix = {
+  salary_account: {
+    asset_account: 'salary_to_account',
+    payment_instrument: 'salary_to_card',
+    expense_category: 'salary_to_expense'
+  },
   income_source: {
     asset_account: 'income_to_account'
   },
   asset_account: {
+    asset_account: 'account_to_account',
     payment_instrument: 'account_to_card',
     expense_category: 'account_to_expense',
     liability_bucket: 'account_to_liability'
@@ -39,7 +45,7 @@ export function validateEdge(edge: FlowEdge, graph: FlowGraph): string[] {
   const target = graph.nodes.find((node) => node.id === edge.targetId);
 
   if (!source || !target) {
-    errors.push('엣지의 시작/도착 노드가 존재하지 않아요.');
+    errors.push('연결의 시작/도착 노드가 존재하지 않아요.');
     return errors;
   }
 
@@ -50,7 +56,7 @@ export function validateEdge(edge: FlowEdge, graph: FlowGraph): string[] {
   }
 
   if (expectedType !== edge.type) {
-    errors.push('엣지 타입이 노드 타입 규칙과 다릅니다.');
+    errors.push('연결 타입이 노드 조합 규칙과 맞지 않아요.');
   }
 
   const duplicate = graph.edges.find(
@@ -65,7 +71,7 @@ export function validateEdge(edge: FlowEdge, graph: FlowGraph): string[] {
   );
 
   if (duplicate) {
-    errors.push('동일한 활성 엣지가 이미 있어요.');
+    errors.push('같은 활성 연결이 이미 있어요.');
   }
 
   return errors;
@@ -86,7 +92,7 @@ export function validateGraph(graph: FlowGraph): string[] {
 
   for (const edge of graph.edges) {
     if (edgeIdSet.has(edge.id)) {
-      errors.push(`중복된 엣지 ID: ${edge.id}`);
+      errors.push(`중복된 연결 ID: ${edge.id}`);
     }
     edgeIdSet.add(edge.id);
     errors.push(...validateEdge(edge, graph));
@@ -94,4 +100,3 @@ export function validateGraph(graph: FlowGraph): string[] {
 
   return errors;
 }
-

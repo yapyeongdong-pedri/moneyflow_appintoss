@@ -45,6 +45,7 @@ export function redo(state: GraphHistoryState): GraphHistoryState {
 export interface AddNodeInput {
   type: NodeType;
   name: string;
+  meta?: FlowNode['meta'];
   x?: number;
   y?: number;
 }
@@ -54,6 +55,7 @@ export function addNode(state: GraphHistoryState, input: AddNodeInput): GraphHis
     id: createId('node'),
     type: input.type,
     name: input.name.trim(),
+    meta: input.meta,
     ui: {
       x: input.x ?? 0,
       y: input.y ?? 0
@@ -102,7 +104,7 @@ export function addEdge(state: GraphHistoryState, input: AddEdgeInput): GraphHis
   const target = state.present.nodes.find((node) => node.id === input.targetId);
   if (!source || !target) throw new Error('노드를 찾을 수 없어요.');
   const edgeType = resolveEdgeType(source.type, target.type);
-  if (!edgeType) throw new Error('허용되지 않는 연결입니다.');
+  if (!edgeType) throw new Error('허용되지 않는 연결이에요.');
 
   const edge: FlowEdge = {
     id: createId('edge'),
@@ -130,7 +132,7 @@ export function updateEdge(state: GraphHistoryState, edgeId: string, patch: Part
     edges: state.present.edges.map((edge) => (edge.id === edgeId ? { ...edge, ...patch } : edge))
   };
   const target = graph.edges.find((edge) => edge.id === edgeId);
-  if (!target) throw new Error('엣지를 찾을 수 없어요.');
+  if (!target) throw new Error('연결을 찾을 수 없어요.');
   const errors = validateEdge(target, graph);
   if (errors.length) throw new Error(errors[0]);
   return pushHistory(state, graph);
@@ -149,4 +151,3 @@ export function replaceGraph(state: GraphHistoryState, graph: FlowGraph): GraphH
   if (errors.length) throw new Error(errors[0]);
   return pushHistory(state, graph);
 }
-
