@@ -333,10 +333,7 @@ body {
   margin: 6px 10px 0;
   border-radius: 18px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 12% 8%, #ecf6ff 0%, transparent 35%),
-    radial-gradient(circle at 90% 80%, #eaf8f4 0%, transparent 32%),
-    linear-gradient(180deg, #ffffff, #f5f9ff);
+  background: linear-gradient(180deg, #f6f8fb, #f4f7fb);
   border: 1px solid #dbe6f1;
   box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
   min-height: 0;
@@ -349,25 +346,12 @@ body {
   pointer-events: none;
   display: grid;
   grid-template-rows: repeat(5, minmax(0, 1fr));
-  background:
-    linear-gradient(
-      180deg,
-      rgba(148, 156, 168, 0.12) 0%,
-      rgba(148, 156, 168, 0.09) 18%,
-      rgba(148, 156, 168, 0.06) 22%,
-      rgba(148, 156, 168, 0.07) 38%,
-      rgba(148, 156, 168, 0.05) 42%,
-      rgba(148, 156, 168, 0.06) 58%,
-      rgba(148, 156, 168, 0.045) 62%,
-      rgba(148, 156, 168, 0.05) 78%,
-      rgba(148, 156, 168, 0.035) 82%,
-      rgba(148, 156, 168, 0.04) 100%
-    );
+  background: linear-gradient(180deg, rgba(146, 154, 166, 0.11) 0%, rgba(146, 154, 166, 0.055) 100%);
 }
 
 .canvas-band {
   position: relative;
-  background: transparent;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
 }
 
 .canvas-band-1,
@@ -382,7 +366,7 @@ body {
   bottom: 6px;
   font-size: 10px;
   font-weight: 600;
-  color: rgba(90, 98, 108, 0.58);
+  color: rgba(90, 98, 108, 0.52);
   letter-spacing: -0.01em;
 }
 
@@ -761,7 +745,13 @@ select {
 
 .react-flow {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  background: transparent !important;
+}
+
+.react-flow__pane,
+.react-flow__viewport {
+  background: transparent !important;
 }
 
 .react-flow__handle {

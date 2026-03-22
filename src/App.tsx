@@ -34,6 +34,8 @@ const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH,
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
 const SALARY_X = Math.round(CANVAS_CENTER_X - SALARY_NODE_WIDTH / 2);
 const DEFAULT_VIEW_MAX_ZOOM = 1;
+const MIN_NODE_GAP = 6;
+const ROW_LINE_GAP = 44;
 
 const THEMES: Record<ThemeName, { className: string }> = {
   'calm-mint': { className: 'theme-calm-mint' },
@@ -173,7 +175,6 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
   const positionRow = (rowKey: string, nodes: FlowNode[], yPos: number) => {
     if (!nodes.length) return;
     const rowNodes = nodes.slice(0, rowLimit(rowKey));
-    const xs = slotX(rowNodes.length);
     if (rowKey === 'salary_account') {
       const salary = rowNodes[0];
       xById.set(salary.id, SALARY_X);
@@ -192,22 +193,31 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       return a.node.name.localeCompare(b.node.name);
     });
 
-    const available = [...xs];
-    withPreferred.forEach(({ node, preferredX }) => {
-      let bestIdx = 0;
-      let bestDist = Math.abs(available[0] - preferredX);
-      for (let i = 1; i < available.length; i += 1) {
-        const dist = Math.abs(available[i] - preferredX);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = i;
+    const maxPerLine = Math.max(1, Math.floor((CANVAS_WIDTH - NODE_SIDE_GUTTER * 2 + MIN_NODE_GAP) / (NODE_BOX_WIDTH + MIN_NODE_GAP)));
+    const lineCount = Math.ceil(withPreferred.length / maxPerLine);
+    const startY = yPos - ((lineCount - 1) * ROW_LINE_GAP) / 2;
+
+    for (let line = 0; line < lineCount; line += 1) {
+      const lineNodes = withPreferred.slice(line * maxPerLine, (line + 1) * maxPerLine);
+      const xs = slotX(lineNodes.length);
+      const available = [...xs];
+      const lineY = Math.round(startY + line * ROW_LINE_GAP);
+      lineNodes.forEach(({ node, preferredX }) => {
+        let bestIdx = 0;
+        let bestDist = Math.abs(available[0] - preferredX);
+        for (let i = 1; i < available.length; i += 1) {
+          const dist = Math.abs(available[i] - preferredX);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestIdx = i;
+          }
         }
-      }
-      const x = available[bestIdx];
-      available.splice(bestIdx, 1);
-      xById.set(node.id, x);
-      node.ui = { ...node.ui, x, y: yPos };
-    });
+        const x = available[bestIdx];
+        available.splice(bestIdx, 1);
+        xById.set(node.id, x);
+        node.ui = { ...node.ui, x, y: lineY };
+      });
+    }
   };
 
   for (const row of rowKeys) {
@@ -411,8 +421,8 @@ function AppBody() {
     type: 'default',
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      width: emphasized ? 18 : 16,
-      height: emphasized ? 18 : 16,
+      width: emphasized ? 9 : 8,
+      height: emphasized ? 9 : 8,
       color: emphasized ? '#147de9' : e.active ? '#2f6f9f' : '#8fa9be'
     },
     style: e.active
