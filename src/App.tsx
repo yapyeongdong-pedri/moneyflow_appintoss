@@ -1,5 +1,5 @@
 ﻿import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import ReactFlow, { Background, Edge, Handle, MarkerType, Node, NodeProps, Position, ReactFlowProvider, useReactFlow } from 'reactflow';
+import ReactFlow, { Edge, Handle, MarkerType, Node, NodeProps, Position, ReactFlowProvider, useReactFlow } from 'reactflow';
 import { BannerAdWrapper } from './ads/BannerAdWrapper';
 import { getBannerAdGroupId } from './ads/adConstants';
 import { shareGraph } from './app/share/share';
@@ -124,7 +124,7 @@ function starterGraph(): FlowGraph {
 
 function prettyLayout(graph: FlowGraph): FlowGraph {
   const rowBand = CANVAS_HEIGHT / 5;
-  const rowTopInset = 10;
+  const rowTopInset = 32;
   const rowY: Record<string, number> = {
     asset_upper: Math.round(rowBand * 0 + rowTopInset),
     salary_account: Math.round(rowBand * 1 + rowTopInset),
@@ -672,7 +672,7 @@ function AppBody() {
                   <div className="canvas-band canvas-band-4"><span className="canvas-band-label">카드</span></div>
                   <div className="canvas-band canvas-band-5"><span className="canvas-band-label">지출 항목</span></div>
                 </div>
-                <ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={lockedZoom} maxZoom={lockedZoom} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS}><Background /></ReactFlow>
+                <ReactFlow nodes={rfNodes} edges={rfEdges} nodeTypes={nodeTypes} proOptions={{ hideAttribution: true }} onMove={handleFlowMove} onMoveEnd={handleFlowMoveEnd} onPaneClick={() => { setSelection({ kind: 'none' }); setDetailOpen(false); }} onNodeClick={(_, node) => { const s = history.present.nodes.find((n) => n.id === node.id); if (s) { setSelection({ kind: 'node', value: s }); setDetailOpen(false); } }} nodesDraggable={false} nodesConnectable={false} elementsSelectable zoomOnPinch={false} zoomOnScroll={false} zoomOnDoubleClick={false} minZoom={lockedZoom} maxZoom={lockedZoom} panOnScroll={false} panOnDrag={false} nodeExtent={FLOW_BOUNDS} translateExtent={PAN_BOUNDS} />
               </section>
 
               {selection.kind === 'node' && !detailOpen && (
