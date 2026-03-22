@@ -23,8 +23,8 @@ type AccountSubtype = 'spending' | 'invest' | 'saving_spend' | 'saving_reserve' 
 
 const CANVAS_WIDTH = 356;
 const CANVAS_HEIGHT = 560;
-const NODE_BOX_WIDTH = 66;
-const SALARY_NODE_WIDTH = 84;
+const NODE_BOX_WIDTH = 48;
+const SALARY_NODE_WIDTH = 48;
 const NODE_SIDE_GUTTER = 8;
 const ACCOUNT_ROW_LIMIT = 7;
 const CARD_ROW_LIMIT = 5;
@@ -34,8 +34,6 @@ const PAN_BOUNDS: [[number, number], [number, number]] = [[0, 0], [CANVAS_WIDTH,
 const CANVAS_CENTER_X = CANVAS_WIDTH / 2;
 const SALARY_X = Math.round(CANVAS_CENTER_X - SALARY_NODE_WIDTH / 2);
 const DEFAULT_VIEW_MAX_ZOOM = 1;
-const MIN_NODE_GAP = 6;
-const ROW_LINE_GAP = 44;
 
 const THEMES: Record<ThemeName, { className: string }> = {
   'calm-mint': { className: 'theme-calm-mint' },
@@ -44,19 +42,15 @@ const THEMES: Record<ThemeName, { className: string }> = {
 };
 
 function nodeClass(type: NodeType, subtype?: string): string {
-  if (type === 'salary_account') return 'node-shape node-salary';
-  if (type === 'asset_account') {
-    const subtypeClass =
-      subtype === 'invest' ? 'node-account-invest'
+  const subtypeClass =
+    type === 'asset_account'
+      ? (subtype === 'invest' ? 'node-account-invest'
         : subtype === 'pension' ? 'node-account-pension'
           : subtype === 'saving_spend' ? 'node-account-saving-spend'
             : subtype === 'saving_reserve' || subtype === 'saving' ? 'node-account-saving-reserve'
-              : 'node-account-spending';
-    return `node-shape node-account ${subtypeClass}`;
-  }
-  if (type === 'payment_instrument') return 'node-shape node-card';
-  if (type === 'expense_category') return 'node-shape node-expense';
-  return 'node-shape node-rounded';
+              : 'node-account-spending')
+      : '';
+  return `node-shape node-card ${subtypeClass}`.trim();
 }
 
 function normalizeAccountSubtype(value?: string): AccountSubtype {
@@ -79,14 +73,13 @@ function isUpperSubtype(subtype: AccountSubtype): boolean {
 }
 
 function FlowShapeNode(props: NodeProps<FlowNodeData>) {
-  const { type, label, subtype, purpose, institution, typeTag } = props.data;
+  const { type, label, subtype, purpose, institution } = props.data;
   const isAccountOrCard = type === 'asset_account' || type === 'payment_instrument';
   const showInstitution = isAccountOrCard || type === 'salary_account';
   const mainText = isAccountOrCard ? purpose ?? label : label;
   return (
     <div className="node-wrap">
       <div className={nodeClass(type, subtype)}>
-        {typeTag && <span className="node-type-tag">{typeTag}</span>}
         {showInstitution && institution && (
           <div className="node-meta-inline">
             <small>{institution}</small>
@@ -193,31 +186,23 @@ function prettyLayout(graph: FlowGraph): FlowGraph {
       return a.node.name.localeCompare(b.node.name);
     });
 
-    const maxPerLine = Math.max(1, Math.floor((CANVAS_WIDTH - NODE_SIDE_GUTTER * 2 + MIN_NODE_GAP) / (NODE_BOX_WIDTH + MIN_NODE_GAP)));
-    const lineCount = Math.ceil(withPreferred.length / maxPerLine);
-    const startY = yPos - ((lineCount - 1) * ROW_LINE_GAP) / 2;
-
-    for (let line = 0; line < lineCount; line += 1) {
-      const lineNodes = withPreferred.slice(line * maxPerLine, (line + 1) * maxPerLine);
-      const xs = slotX(lineNodes.length);
-      const available = [...xs];
-      const lineY = Math.round(startY + line * ROW_LINE_GAP);
-      lineNodes.forEach(({ node, preferredX }) => {
-        let bestIdx = 0;
-        let bestDist = Math.abs(available[0] - preferredX);
-        for (let i = 1; i < available.length; i += 1) {
-          const dist = Math.abs(available[i] - preferredX);
-          if (dist < bestDist) {
-            bestDist = dist;
-            bestIdx = i;
-          }
+    const xs = slotX(withPreferred.length);
+    const available = [...xs];
+    withPreferred.forEach(({ node, preferredX }) => {
+      let bestIdx = 0;
+      let bestDist = Math.abs(available[0] - preferredX);
+      for (let i = 1; i < available.length; i += 1) {
+        const dist = Math.abs(available[i] - preferredX);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIdx = i;
         }
-        const x = available[bestIdx];
-        available.splice(bestIdx, 1);
-        xById.set(node.id, x);
-        node.ui = { ...node.ui, x, y: lineY };
-      });
-    }
+      }
+      const x = available[bestIdx];
+      available.splice(bestIdx, 1);
+      xById.set(node.id, x);
+      node.ui = { ...node.ui, x, y: yPos };
+    });
   };
 
   for (const row of rowKeys) {
@@ -399,7 +384,7 @@ function AppBody() {
       institution: n.type === 'asset_account' || n.type === 'payment_instrument' || n.type === 'salary_account'
         ? n.meta?.institution ?? (n.type === 'asset_account' ? '은행' : n.type === 'payment_instrument' ? '카드사' : '주거래 은행')
         : undefined,
-      typeTag: n.type === 'asset_account' ? '계좌' : n.type === 'payment_instrument' ? '카드' : undefined,
+      typeTag: undefined,
       subtype: n.meta?.subtype
     }
   })), [graph, highlighted]);

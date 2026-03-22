@@ -333,7 +333,7 @@ body {
   margin: 6px 10px 0;
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(180deg, #f6f8fb, #f4f7fb);
+  background: #ffffff;
   border: 1px solid #dbe6f1;
   box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
   min-height: 0;
@@ -346,12 +346,13 @@ body {
   pointer-events: none;
   display: grid;
   grid-template-rows: repeat(5, minmax(0, 1fr));
-  background: linear-gradient(180deg, rgba(146, 154, 166, 0.11) 0%, rgba(146, 154, 166, 0.055) 100%);
+  background: transparent;
 }
 
 .canvas-band {
   position: relative;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+  background: transparent;
+  border-bottom: 1px dotted rgba(126, 136, 148, 0.28);
 }
 
 .canvas-band-1,
@@ -536,8 +537,8 @@ select {
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  width: 64px;
-  min-height: 42px;
+  width: 48px;
+  min-height: 38px;
   padding: 5px 6px;
   font-size: 9px;
   text-align: left;
@@ -560,20 +561,20 @@ select {
 }
 
 .node-salary {
-  width: 84px;
-  min-height: 42px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #0f7f95, #1653ab);
+  width: 48px;
+  min-height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f89eb, #2f60cf);
   align-items: center;
   justify-content: center;
 }
 
 .node-account {
-  width: 66px;
-  min-height: 50px;
+  width: 48px;
+  min-height: 38px;
   border-radius: 10px;
-  clip-path: polygon(11% 0, 89% 0, 100% 50%, 89% 100%, 11% 100%, 0 50%);
-  background: linear-gradient(135deg, #35addf 0%, #288ec5 52%, #1f6aa8 100%);
+  clip-path: none;
+  background: linear-gradient(135deg, #4f89eb, #2f60cf);
 }
 
 .node-account::before {
@@ -613,29 +614,29 @@ select {
 }
 
 .node-card {
-  width: 66px;
-  min-height: 48px;
+  width: 48px;
+  min-height: 38px;
   border-radius: 10px;
   background: linear-gradient(135deg, #4f89eb, #2f60cf);
 }
 
 .node-rounded {
-  width: 64px;
+  width: 48px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6b7e93, #4d5f73);
+  background: linear-gradient(135deg, #4f89eb, #2f60cf);
 }
 
 .node-expense {
-  width: 64px;
-  min-height: 42px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #a95fd7, #7d3fb2);
+  width: 48px;
+  min-height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f89eb, #2f60cf);
   align-items: center;
 }
 
 .node-main-label {
   width: 100%;
-  font-size: 10px;
+  font-size: 9px;
   line-height: 1.1;
   font-weight: 800;
   text-align: left;
@@ -646,8 +647,8 @@ select {
 
 .node-account .node-main-label,
 .node-card .node-main-label {
-  margin-top: 12px;
-  font-size: 14px;
+  margin-top: 9px;
+  font-size: 11px;
   line-height: 1;
 }
 
@@ -695,7 +696,7 @@ select {
 }
 
 .node-salary .node-main-label {
-  font-size: 14px;
+  font-size: 11px;
   line-height: 1;
   margin-top: 9px;
 }
@@ -704,9 +705,9 @@ select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 4.2em;
+  max-width: 4.4em;
   margin: 0 auto;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .scroll-top-chip {
