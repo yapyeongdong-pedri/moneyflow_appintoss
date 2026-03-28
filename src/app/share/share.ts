@@ -31,8 +31,8 @@ export async function exportGraphPng(element: HTMLElement): Promise<void> {
 }
 
 export async function shareGraph(graph: FlowGraph): Promise<string> {
-  const title = 'Money Flow';
-  const text = `내 Money Flow를 공유해요. 노드 ${graph.nodes.length}개, 연결 ${graph.edges.length}개`;
+  const title = '머니플로우';
+  const text = `내 머니플로우를 공유해요. 노드 ${graph.nodes.length}개, 연결 ${graph.edges.length}개`;
   const env = detectEnvironment();
 
   if (env !== 'web') {

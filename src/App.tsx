@@ -793,7 +793,7 @@ function AppBody() {
               <h1 className="intro-title">관리비, 통신비, 구독료 어느 통장/카드에서 나가더라?</h1>
               <p className="intro-body">
                 <span className="intro-body-line1">소중한 내 월급</span>
-                <span className="intro-body-line2"><strong className="intro-body-strong">Money Flow</strong>로 관리하세요</span>
+                <span className="intro-body-line2"><strong className="intro-body-strong">머니플로우</strong>로 관리하세요</span>
               </p>
               <div className="intro-cards">
                 <div className="intro-card">
@@ -810,13 +810,17 @@ function AppBody() {
                 </div>
               </div>
               <button type="button" className="btn btn-primary intro-cta" onClick={() => setShowIntro(false)}>
-                <span className="intro-cta-text">내 Money Flow 만들기</span>
+                <span className="intro-cta-text">내 머니플로우 만들기</span>
               </button>
             </section>
           ) : (
             <>
-              <header className="topbar"><div className="brand"><h1>Money Flow</h1></div><div className="top-actions"><button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button><button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button><button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button></div></header>
               <section className="summary-card">
+                <div className="top-actions">
+                  <button type="button" className="btn btn-weak" onClick={() => setResetConfirmOpen(true)}>초기화</button>
+                  <button type="button" className="btn btn-weak" onClick={async () => { try { if (graph) setMessage(await shareGraph(graph)); } catch { setMessage('공유를 완료하지 못했어요.'); } }}>공유</button>
+                  <button type="button" className="btn btn-primary" onClick={() => { resetComposerForm(); setComposerOpen(true); }}>노드 추가</button>
+                </div>
                 <p>입출금 {accountSubtypeCounts.spending} · 적금(지출용) {accountSubtypeCounts.savingSpend} · 적금(저축용) {accountSubtypeCounts.savingReserve} · 투자 {accountSubtypeCounts.invest} · 연금 {accountSubtypeCounts.pension}</p>
               </section>
               <section className="canvas-wrap" id="flow-canvas" ref={(el) => { canvasWrapRef.current = el; }}>

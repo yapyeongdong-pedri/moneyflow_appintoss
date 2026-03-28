@@ -1,0 +1,17 @@
+# 머니플로우 - 개발 진행 기록
+
+## 프로젝트 정보
+- 앱 이름: 머니플로우
+- 앱 유형: 비게임
+- 생성일: 2026-03-28
+
+## 세션 기록
+
+### Session 1 - 2026-03-28
+- 프로젝트 초기화 완료
+- granite.config.ts 생성 (navigationBar, brand 설정)
+- index.html viewport + 브랜딩 메타태그 설정
+- 인트로 브랜딩 문구 통일
+- feature_list.json 생성 (4개 기능 등록)
+- claude-progress.txt 생성
+- 다음 작업: F002 구현

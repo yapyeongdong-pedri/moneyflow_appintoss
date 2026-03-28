@@ -1,0 +1,50 @@
+{
+  "project": "머니플로우",
+  "created": "2026-03-28",
+  "features": [
+    {
+      "id": "F001",
+      "category": "infrastructure",
+      "description": "프로젝트 초기 세팅",
+      "steps": [
+        "granite.config.ts",
+        "index.html 메타태그",
+        "인트로 화면"
+      ],
+      "passes": true
+    },
+    {
+      "id": "F002",
+      "category": "logic",
+      "description": "자산 흐름 그래프 편집",
+      "steps": [
+        "노드 추가/삭제",
+        "엣지 연결 검증",
+        "자동 레이아웃"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F003",
+      "category": "share",
+      "description": "그래프 공유",
+      "steps": [
+        "Toss 공유 링크 생성",
+        "웹 공유 fallback",
+        "클립보드 fallback"
+      ],
+      "passes": false
+    },
+    {
+      "id": "F004",
+      "category": "ads",
+      "description": "배너 광고 연동",
+      "steps": [
+        "TossAds initialize",
+        "배너 attach",
+        "지원 여부 fallback"
+      ],
+      "passes": false
+    }
+  ]
+}
