@@ -10,6 +10,6 @@ export default defineConfig({
   },
   brand: {
     displayName: APP_NAME,
-    primaryColor: '#3182F6'
+    primaryColor: '#03224D'
   }
 });

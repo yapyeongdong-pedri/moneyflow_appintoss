@@ -59,8 +59,8 @@ body {
   --bg-main: #ffffff;
   --bg-soft: #ffffff;
   --panel: #ffffff;
-  --accent: #1b64da;
-  --accent-weak: #e8f1ff;
+  --accent: #03224d;
+  --accent-weak: #e6ebf1;
   --text-primary: #13211e;
   --text-muted: #5a6573;
   --danger: #d14343;
@@ -70,8 +70,8 @@ body {
   --bg-main: #ffffff;
   --bg-soft: #ffffff;
   --panel: #ffffff;
-  --accent: #1b64da;
-  --accent-weak: #e8f1ff;
+  --accent: #03224d;
+  --accent-weak: #e6ebf1;
   --text-primary: #162740;
   --text-muted: #5a6573;
   --danger: #c53a3a;
@@ -81,8 +81,8 @@ body {
   --bg-main: #ffffff;
   --bg-soft: #ffffff;
   --panel: #ffffff;
-  --accent: #1b64da;
-  --accent-weak: #e8f1ff;
+  --accent: #03224d;
+  --accent-weak: #e6ebf1;
   --text-primary: #3d2a1d;
   --text-muted: #5a6573;
   --danger: #be3535;
@@ -431,14 +431,14 @@ body {
 
 .btn-primary {
   color: #fff;
-  background: linear-gradient(180deg, #2f80f5 0%, #1b64da 100%);
-  box-shadow: 0 6px 12px rgba(27, 100, 218, 0.24);
+  background: linear-gradient(180deg, #0a3a73 0%, #03224d 100%);
+  box-shadow: 0 6px 12px rgba(3, 34, 77, 0.28);
 }
 
 .btn-weak {
-  color: #1b64da;
-  background: #eaf2ff;
-  box-shadow: inset 0 0 0 1px rgba(27, 100, 218, 0.12);
+  color: #03224d;
+  background: #e7edf4;
+  box-shadow: inset 0 0 0 1px rgba(3, 34, 77, 0.14);
 }
 
 .btn-danger {
