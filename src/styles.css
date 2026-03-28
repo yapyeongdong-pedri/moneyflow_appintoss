@@ -46,9 +46,13 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(clamp(92px, 14dvh, 124px) + env(safe-area-inset-bottom));
+  padding-bottom: 0;
   background: #ffffff;
   color: var(--text-primary);
+}
+
+.app-shell-with-ad {
+  padding-bottom: calc(clamp(92px, 14dvh, 124px) + env(safe-area-inset-bottom));
 }
 
 .theme-calm-mint {
@@ -546,6 +550,10 @@ select {
   background: rgba(255, 255, 255, 0.96);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
+}
+
+.bottom-ad-hidden {
+  display: none;
 }
 
 .banner-placeholder {

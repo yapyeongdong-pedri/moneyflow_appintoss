@@ -378,7 +378,7 @@ function BottomSheet({
   return (
     <div className={align === 'center' ? 'sheet-overlay sheet-overlay-center' : 'sheet-overlay'} role="presentation" onClick={onClose}>
       <section className="sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <header className="sheet-header"><strong>{title}</strong><button type="button" className="btn btn-weak" onClick={onClose}>닫기</button></header>
+        <div className="sheet-header"><strong>{title}</strong><button type="button" className="btn btn-weak" onClick={onClose}>닫기</button></div>
         <div className="sheet-body">{children}</div>
       </section>
     </div>
@@ -389,6 +389,7 @@ function AppBody() {
   const { setViewport } = useReactFlow();
   const [history, setHistory] = useState<GraphHistoryState | null>(null);
   const [showIntro, setShowIntro] = useState(true);
+  const [isBottomAdVisible, setIsBottomAdVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [selection, setSelection] = useState<Selection>({ kind: 'none' });
   const [composerOpen, setComposerOpen] = useState(false);
@@ -430,6 +431,10 @@ function AppBody() {
   const [detailExpenseLinkSourceId, setDetailExpenseLinkSourceId] = useState('');
   const [detailExpenseMemo, setDetailExpenseMemo] = useState('');
   const [detailSalaryBank, setDetailSalaryBank] = useState('');
+  const showAdDebugPlaceholder = useMemo(() => {
+    const value = new URLSearchParams(window.location.search).get('ad_debug');
+    return value === '1' || value === 'true';
+  }, []);
 
   useEffect(() => {
     const loaded = loadGraph();
@@ -784,10 +789,13 @@ function AppBody() {
     } catch (e) { setMessage((e as Error).message); }
   };
 
+  const shouldShowAdSlot = !showIntro && isBottomAdVisible;
+  const appShellClassName = `app-shell ${themeClass} ${showIntro ? 'app-shell-intro' : ''} ${shouldShowAdSlot ? 'app-shell-with-ad' : ''}`.trim();
+
   return (
     <main className="app-stage">
       <section className="mobile-frame">
-        <div className={`app-shell ${themeClass} ${showIntro ? 'app-shell-intro' : ''}`}>
+        <div className={appShellClassName}>
           {showIntro ? (
             <section className="intro-screen">
               <h1 className="intro-title">관리비, 통신비, 구독료 어느 통장/카드에서 나가더라?</h1>
@@ -885,7 +893,14 @@ function AppBody() {
               </datalist>
 
               {message && <div className="toast">{message}</div>}
-              <footer className="bottom-ad"><BannerAdWrapper adGroupId={getBannerAdGroupId('text')} mode="fixed" /></footer>
+              <footer className={`bottom-ad ${shouldShowAdSlot ? '' : 'bottom-ad-hidden'}`.trim()}>
+                <BannerAdWrapper
+                  adGroupId={getBannerAdGroupId('text')}
+                  mode="fixed"
+                  showWebPlaceholder={showAdDebugPlaceholder}
+                  onVisibilityChange={setIsBottomAdVisible}
+                />
+              </footer>
             </>
           )}
         </div>

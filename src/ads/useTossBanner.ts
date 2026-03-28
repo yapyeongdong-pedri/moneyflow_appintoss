@@ -1,6 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type BannerAttachResult = { destroy: () => void } | undefined;
+type BannerSlotEventPayload = { slotId: string; adGroupId: string; adMetadata: unknown };
+type BannerSlotErrorPayload = {
+  slotId: string;
+  adGroupId: string;
+  adMetadata: unknown;
+  error: { code: number; message: string; domain?: string };
+};
+type BannerCallbacks = {
+  onAdRendered?: (payload: BannerSlotEventPayload) => void;
+  onNoFill?: (payload: { slotId: string; adGroupId: string; adMetadata: unknown }) => void;
+  onAdFailedToRender?: (payload: BannerSlotErrorPayload) => void;
+};
+type BannerAttachOptions = {
+  theme?: 'auto' | 'light' | 'dark';
+  tone?: 'blackAndWhite' | 'grey';
+  variant?: 'card' | 'expanded';
+  callbacks?: BannerCallbacks;
+};
 const TOSS_WEB_FRAMEWORK_MODULE = '@apps-in-toss/web-framework';
 
 async function loadTossFramework(): Promise<Record<string, unknown>> {
@@ -45,7 +63,11 @@ export function useTossBanner() {
     };
   }, []);
 
-  const attachBanner = useCallback(async (adGroupId: string, element: HTMLElement): Promise<BannerAttachResult> => {
+  const attachBanner = useCallback(async (
+    adGroupId: string,
+    element: HTMLElement,
+    options?: BannerAttachOptions
+  ): Promise<BannerAttachResult> => {
     if (!isInitialized) return undefined;
     try {
       const tossFramework = await loadTossFramework();
@@ -59,7 +81,8 @@ export function useTossBanner() {
       return attachBannerFn(adGroupId, element, {
         theme: 'auto',
         tone: 'blackAndWhite',
-        variant: 'expanded'
+        variant: 'expanded',
+        ...options
       });
     } catch {
       return undefined;
